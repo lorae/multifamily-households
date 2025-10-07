@@ -1,4 +1,4 @@
-# 🍝 Households Over the Years
+# 🏘️ Households Over the Years
 How has household size and configuration changed in the last 7 decades? we answer this question 
 using publicly available American Community Survey and Decennial Census data, accessed 
 via IPUMS, alongside the analytic tools available in the [demographR](https://github.com/lorae/demographr) package.
