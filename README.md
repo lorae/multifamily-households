@@ -5,7 +5,11 @@ via IPUMS, alongside the analytic tools available in the [demographR](https://gi
 
 ## 📊 Key Findings
 
-To come.
+The average American at the turn of the 20th century lived in a household with nearly 
+6 individuals. With some exceptions, that value has since been on the decline, with the
+rate of decrease in household size much slower in recent decades than during the brunt of 
+the 20th century. As of 2023, the average American lives in a household of 3.33 persons.
+![](output/figures/fig01-hhsize-decades-line.jpeg)
 
 ## ⚡ Quick Start
 For experienced users who just want to get the project running right away. If you

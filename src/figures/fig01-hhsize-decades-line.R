@@ -52,7 +52,7 @@ ggsave(
   filename = "output/figures/fig01-hhsize-decades-line.jpeg",
   plot = fig01,
   width = 6,
-  height = 6,
+  height = 4,
   dpi = 500,
   scale = 1.5
 )
