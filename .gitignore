@@ -1,3 +1,9 @@
+# ignore contents of data, but preserve file structure
+data/raw-microdata/**
+!data/raw-microdata/.gitkeep
+data/db/**
+!data/db/.gitkeep
+
 # History files
 .Rhistory
 .Rapp.history
