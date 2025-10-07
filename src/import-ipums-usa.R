@@ -30,7 +30,7 @@ print(paste0("IPUMS API key: ", api_key))
 set_ipums_api_key(api_key)
 
 # Set the destination directories for the IPUMS data pull
-download_dir <- "data/ipums-microdata"
+download_dir <- "data/raw-microdata"
 db_dir <- "data/db"
 
 # ----- Step 1: Define, submit, and wait for data extract ----- #
