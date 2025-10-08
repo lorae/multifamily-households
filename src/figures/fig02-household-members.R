@@ -16,6 +16,7 @@ devtools::load_all("../demographr")
 con <- dbConnect(duckdb::duckdb(), "data/db/ipums.duckdb")
 ipums_household <- tbl(con, "ipums_household")
 
+# ----- Step 1: Produce data ----- #
 # Helper function to compute weighted mean by YEAR and rename column
 get_component_mean <- function(var) {
   crosstab_mean(
@@ -77,7 +78,7 @@ hh_long <- hh_long |>
     )
   ))
 
-# Sand chart
+# ----- Step 2: Create plot ----- #
 fig02 <- ggplot(hh_long, aes(x = YEAR, y = value, fill = component)) +
   geom_area(color = "white", size = 0.2, alpha = 0.9) +
   scale_x_continuous(breaks = seq(1900, 2025, by = 10)) +
@@ -96,7 +97,7 @@ fig02 <- ggplot(hh_long, aes(x = YEAR, y = value, fill = component)) +
 
 fig02
 
-# ----- Step 4: Save
+# ----- Step 3: Save data and plot ----- #
 
 write_csv(
   hh_components,
