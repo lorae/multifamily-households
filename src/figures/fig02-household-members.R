@@ -44,7 +44,7 @@ hh_components <- vars |>
   reduce(left_join, by = "YEAR")
 
 
-# Step 1: Add reference person column
+# Add reference person column
 hh_long <- hh_components |>
   mutate(reference_person = 1) |>
   pivot_longer(
@@ -53,8 +53,7 @@ hh_long <- hh_components |>
     values_to = "value"
   )
 
-# Step 2: Optional: reorder components for nicer stacking
-# (reference_person at bottom, children/spouse next, etc.)
+# Reorder components for nicer stacking
 hh_long <- hh_long |>
   mutate(component = factor(
     component,
@@ -78,8 +77,8 @@ hh_long <- hh_long |>
     )
   ))
 
-# Step 3: Plot sand chart
-ggplot(hh_long, aes(x = YEAR, y = value, fill = component)) +
+# Sand chart
+fig02 <- ggplot(hh_long, aes(x = YEAR, y = value, fill = component)) +
   geom_area(color = "white", size = 0.2, alpha = 0.9) +
   scale_x_continuous(breaks = seq(1900, 2025, by = 10)) +
   scale_fill_brewer(palette = "Set2") +
@@ -95,50 +94,22 @@ ggplot(hh_long, aes(x = YEAR, y = value, fill = component)) +
     panel.grid.minor = element_blank()
   )
 
+fig02
 
-# ----- Step 4: Scale components relative to 2023 (current) value)
+# ----- Step 4: Save
 
-hh_components_scaled <- hh_components |>
-  mutate(across(
-    n_spouse:n_non_rel,
-    ~ .x / .x[which(YEAR == 2023)]
-  ))
-
-
-hh_components_long <- hh_components_scaled |>
-  pivot_longer(
-    cols = n_spouse:n_non_rel,
-    names_to = "component",
-    values_to = "relative_value"
-  )
-
-# Optional: prettier labels for legend
-component_labels <- c(
-  n_spouse = "Spouse",
-  n_child = "Child",
-  n_parent = "Parent",
-  n_grandchild = "Grandchild",
-  n_other_rel = "Other relative",
-  n_non_rel = "Non-relative"
+write_csv(
+  hh_components,
+  "output/figure-data/fig02-household-members-sand.csv"
 )
 
-# ----- Plot ----- #
-fig_components <- hh_components_long |>
-  ggplot(aes(x = YEAR, y = relative_value, color = component)) +
-  geom_line(size = 1.2) +
-  scale_color_brewer(palette = "Dark2", labels = component_labels) +
-  scale_x_continuous(breaks = seq(1900, 2025, by = 10)) +
-  labs(
-    title = "Household Members per Household (Normalized to 2023 = 1)",
-    x = NULL,
-    y = "Relative to 2023"
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
-    legend.title = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.text = element_text(color = "black")
-  )
+ggsave(
+  filename = "output/figures/fig02-household-members-sand.jpeg",
+  plot = fig02,
+  width = 6,
+  height = 4,
+  dpi = 500,
+  scale = 1.5
+)
 
-fig_components
+
