@@ -96,6 +96,53 @@ ggplot(hh_long, aes(x = YEAR, y = value, fill = component)) +
   )
 
 
+# ----- Step 4: Scale components relative to 2023 (current) value)
+
+hh_components_scaled <- hh_components |>
+  mutate(across(
+    n_spouse:n_non_rel,
+    ~ .x / .x[which(YEAR == 2023)]
+  ))
+
+
+hh_components_long <- hh_components_scaled |>
+  pivot_longer(
+    cols = n_spouse:n_non_rel,
+    names_to = "component",
+    values_to = "relative_value"
+  )
+
+# Optional: prettier labels for legend
+component_labels <- c(
+  n_spouse = "Spouse",
+  n_child = "Child",
+  n_parent = "Parent",
+  n_grandchild = "Grandchild",
+  n_other_rel = "Other relative",
+  n_non_rel = "Non-relative"
+)
+
+# ----- Plot ----- #
+fig_components <- hh_components_long |>
+  ggplot(aes(x = YEAR, y = relative_value, color = component)) +
+  geom_line(size = 1.2) +
+  scale_color_brewer(palette = "Dark2", labels = component_labels) +
+  scale_x_continuous(breaks = seq(1900, 2025, by = 10)) +
+  labs(
+    title = "Household Members per Household (Normalized to 2023 = 1)",
+    x = NULL,
+    y = "Relative to 2023"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    legend.title = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(color = "black")
+  )
+
+fig_components
+
 # ---- k means
 data1900 <- ipums_household |> 
   filter(YEAR == 1900) |> 
@@ -200,33 +247,43 @@ round(centers_unscaled, 2)
 table(data1900$cluster)
 
 # ---- k means with 7 types
-data1900 <- ipums_household |> 
-  filter(YEAR == 1900) |> 
+data <- ipums_household |> 
+  filter(YEAR == 2023) |> 
   select(n_spouse, n_child, n_parent, n_grandchild, n_other_rel, n_non_rel) |>
   collect()
 
 # Suppose hh_data has columns: n_spouse, n_child, n_parent, n_grandchild, n_other_rel, n_non_rel
-data1900_scaled <- data1900 %>% 
+data_scaled <- data %>% 
   select(n_spouse:n_non_rel) %>% 
   scale()
 
 set.seed(123)
-k_fit <- kmeans(data1900_scaled, centers = 7)  # try different k
+k_fit <- kmeans(data_scaled, centers = 8)  # try different k
 
-data1900$cluster <- k_fit$cluster
+data$cluster <- k_fit$cluster
 
 # Look at cluster centers (these are your archetypes)
 round(k_fit$centers, 2)
 
-centers_unscaled <- sweep(k_fit$centers, 2, attr(data1900_scaled, "scaled:scale"), "*")
-centers_unscaled <- sweep(centers_unscaled, 2, attr(data1900_scaled, "scaled:center"), "+")
+centers_unscaled <- sweep(k_fit$centers, 2, attr(data_scaled, "scaled:scale"), "*")
+centers_unscaled <- sweep(centers_unscaled, 2, attr(data_scaled, "scaled:center"), "+")
 round(centers_unscaled, 2)
 
-table(data1900$cluster)
+table(data$cluster)
+
+# ----- elbow
+wss <- sapply(1:15, function(k) {
+  kmeans(data_scaled, centers = k, nstart = 10)$tot.withinss
+})
+
+plot(1:15, wss, type = "b",
+     xlab = "Number of clusters (k)",
+     ylab = "Total within-cluster SS",
+     main = "Elbow Method")
 
 # --- PCA
 data1900 <- ipums_household |> 
-  filter(YEAR == 1900) |> 
+  filter(YEAR == 1900 & GQ %in% c(0,1,2)) |> 
   select(
     n_spouse, n_child, n_parent, n_grandchild, n_other_rel, n_non_rel,
     AGE,
