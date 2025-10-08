@@ -1,5 +1,5 @@
 # 🏘️ Households Over the Years
-How has household size and configuration changed in the last 7 decades? we answer this question 
+How has household size and configuration changed in the last 125 years? We answer this question 
 using publicly available American Community Survey and Decennial Census data, accessed 
 via IPUMS, alongside the analytic tools available in the [demographR](https://github.com/lorae/demographr) package.
 
@@ -15,26 +15,24 @@ the 20th century. As of 2023, the average American lives in a household of 3.33 
 For experienced users who just want to get the project running right away. If you
 have trouble following these steps, please follow the **Detailed Start** guide below.
 
-1. Navigate to the directory where you want the repo
+1. Navigate to the directory where you want the project to be saved and clone both required repos side by side
 
     ```bash
     cd your/path/to/parent/directory
     ```
-
-2. Clone both required repos side by side
 
     ```bash
     git clone https://github.com/lorae/households-over-the-years households-over-the-years
     git clone https://github.com/lorae/demographr demographr
     ```
 
-3. Enter the main project
+2. Enter the main project
 
     ```bash
     cd households-over-the-years
     ```
 
-4. Copy the environment file and edit it with your own [IPUMS API key](https://account.ipums.org/api_keys)
+3. Copy the environment file and edit it with your own [IPUMS API key](https://account.ipums.org/api_keys)
 
     ```bash
     cp example.Renviron .Renviron
@@ -42,7 +40,7 @@ have trouble following these steps, please follow the **Detailed Start** guide b
     # IMPORTANT: open .Renviron and replace "your_ipums_api_key" with your actual key
     ```
 
-5. Restore dependencies and run the analysis
+4. Restore dependencies and run the analysis
 
     Open `households-over-the-years.Rproj` in your preferred IDE, then in the R console:
     
