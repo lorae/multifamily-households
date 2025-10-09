@@ -12,7 +12,7 @@ library("readr")
 devtools::load_all("../demographr")
 
 con <- dbConnect(duckdb::duckdb(), "data/db/ipums.duckdb")
-ipums_person <- tbl(con, "ipums")
+ipums_person <- tbl(con, "ipums_person")
 
 hhsize_decade <- crosstab_mean(
   data = ipums_person |> filter(GQ %in% c(0,1,2)),
