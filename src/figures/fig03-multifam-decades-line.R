@@ -24,7 +24,7 @@ multifam_decade <- crosstab_percent(
   arrange(YEAR)
 
 # ----- Graph ----- #
-fig_multifam <- multifam_decade |>
+fig03 <- multifam_decade |>
   ggplot(aes(x = YEAR, y = percent)) +
   geom_line(size = 1.2, color = "#0072B2") +
   geom_point(size = 2, color = "#0072B2") +
@@ -43,4 +43,20 @@ fig_multifam <- multifam_decade |>
     axis.title.y = element_text(margin = margin(r = 10))
   )
 
-fig_multifam
+fig03
+
+# ----- Step 3: Save data and plot ----- #
+
+write_csv(
+  multifam_decade,
+  "output/figure-data/fig03-multifam-decades-line.csv"
+)
+
+ggsave(
+  filename = "output/figures/fig03-multifam-decades-line.jpeg",
+  plot = fig03,
+  width = 6,
+  height = 4,
+  dpi = 500,
+  scale = 1.5
+)
