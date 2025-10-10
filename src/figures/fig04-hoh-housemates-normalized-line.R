@@ -16,6 +16,7 @@ devtools::load_all("../demographr")
 con <- dbConnect(duckdb::duckdb(), "data/db/ipums.duckdb")
 ipums_household <- tbl(con, "ipums_household")
 
+# ----- Step 1: Calculate data for graphing ------ #
 # Helper function to compute weighted mean by YEAR and rename column
 get_component_mean <- function(var) {
   crosstab_mean(
@@ -44,7 +45,7 @@ hh_components <- vars |>
   reduce(left_join, by = "YEAR")
 
 
-# Step 1: Add reference person column
+# Add reference person column
 hh_long <- hh_components |>
   mutate(reference_person = 1) |>
   pivot_longer(
@@ -53,7 +54,7 @@ hh_long <- hh_components |>
     values_to = "value"
   )
 
-# Step 2: Optional: reorder components for nicer stacking
+# Reorder components for nicer stacking
 # (reference_person at bottom, children/spouse next, etc.)
 hh_long <- hh_long |>
   mutate(component = factor(
@@ -78,8 +79,8 @@ hh_long <- hh_long |>
     )
   ))
 
-# Step 3: Plot sand chart
-ggplot(hh_long, aes(x = YEAR, y = value, fill = component)) +
+# ----- Step 3: Create graph ----- #
+fig04 <- ggplot(hh_long, aes(x = YEAR, y = value, fill = component)) +
   geom_area(color = "white", size = 0.2, alpha = 0.9) +
   scale_x_continuous(breaks = seq(1900, 2025, by = 10)) +
   scale_fill_brewer(palette = "Set2") +
@@ -95,6 +96,7 @@ ggplot(hh_long, aes(x = YEAR, y = value, fill = component)) +
     panel.grid.minor = element_blank()
   )
 
+fig04
 
 # ----- Step 4: Scale components relative to 2023 (current) value)
 
@@ -123,7 +125,7 @@ component_labels <- c(
 )
 
 # ----- Plot ----- #
-fig_components <- hh_components_long |>
+fig04 <- hh_components_long |>
   ggplot(aes(x = YEAR, y = relative_value, color = component)) +
   geom_line(size = 1.2) +
   scale_color_brewer(palette = "Dark2", labels = component_labels) +
@@ -141,4 +143,20 @@ fig_components <- hh_components_long |>
     axis.text = element_text(color = "black")
   )
 
-fig_components
+fig04
+
+# ----- Step 3: Save data and plot ----- #
+
+write_csv(
+  hh_components_scaled,
+  "output/figure-data/fig04-hoh-housemates-normalized-line.csv"
+)
+
+ggsave(
+  filename = "output/figures/fig04-hoh-housemates-normalized-line.jpeg",
+  plot = fig04,
+  width = 6,
+  height = 4,
+  dpi = 500,
+  scale = 1.5
+)
