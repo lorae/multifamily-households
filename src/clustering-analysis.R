@@ -31,10 +31,11 @@ vars <- c(
 
 ipums_household_tb <- ipums_household |>
   filter(GQ %in% c(0,1,2)) |>
-  # TODO: Add household weights back (HHWT)
-  select(all_of(vars)) |>
-  collect() |>
-  scale()
+  select(YEAR, HHWT, all_of(vars)) |>
+  collect() 
+
+ipums_household_scaled <-  scale(ipums_household_tb |> select(-YEAR, -HHWT))
+
 
 # ----- elbow
 # Prepare a list to store all models
@@ -72,7 +73,60 @@ k_fit$tot.withinss
 k_fit$betweenss / k_fit$totss
 
 
-centers_unscaled <- sweep(k_fit$centers, 2, attr(ipums_household_tb, "scaled:scale"), "*")
-centers_unscaled <- sweep(centers_unscaled, 2, attr(ipums_household_tb, "scaled:center"), "+")
-round(centers_unscaled, 2)
+hh_clustered <- ipums_household_tb |>
+  mutate(cluster = k_fit$cluster)
+
+cluster_counts_year <- crosstab_count(
+  data = hh_clustered,
+  wt_col = "HHWT",
+  group_by = c("YEAR", "cluster")
+)
+
+cluster_labels <- c(
+  "1" = "Couple + Kids",
+  "2" = "Grandfamily",
+  "3" = "Roommates",
+  "4" = "Extended Family",
+  "5" = "Single-person",
+  "6" = "Adult Child + Parent"
+)
+
+cluster_counts_year <- cluster_counts_year |>
+  mutate(cluster_label = recode(factor(cluster), !!!cluster_labels))
+
+
+library(ggplot2)
+
+ggplot(cluster_counts_year, aes(x = YEAR, y = weighted_count, color = cluster_label)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  scale_color_brewer(palette = "Set2", name = "Household Type") +
+  scale_x_continuous(breaks = seq(1900, 2020, by = 10)) +
+  labs(
+    title = "Household Archetypes Over Time",
+    x = "Year",
+    y = "Weighted Household Count"
+  ) +
+  theme_minimal(base_size = 14)
+
+cluster_counts_scaled <- cluster_counts_year |>
+  group_by(cluster_label) |>
+  mutate(
+    baseline_2023 = weighted_count[YEAR == 2023],
+    scaled_count = weighted_count / baseline_2023
+  ) |>
+  ungroup()
+
+ggplot(cluster_counts_scaled, aes(x = YEAR, y = scaled_count, color = cluster_label)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  scale_color_brewer(palette = "Set2", name = "Household Type") +
+  scale_x_continuous(breaks = seq(1900, 2023, by = 10)) +
+  labs(
+    title = "Relative Growth of Household Archetypes (Indexed to 2023 = 1)",
+    x = "Year",
+    y = "Multiple of 2023 Household Count"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(panel.grid.minor = element_blank())
 
