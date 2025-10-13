@@ -9,6 +9,7 @@ library("ggplot2")
 library("readr")
 library("purrr")
 library("tidyr")
+library("forcats")
 
 devtools::load_all("../demographr")
 
@@ -73,22 +74,19 @@ k_fit$tot.withinss
 k_fit$betweenss / k_fit$totss
 
 
-hh_clustered <- ipums_household_tb |>
-  mutate(cluster = k_fit$cluster)
+cluster_counts_year <- cluster_counts_year |>
+  mutate(cluster_label = fct_recode(factor(cluster), !!!cluster_labels))
 
-cluster_counts_year <- crosstab_count(
-  data = hh_clustered,
-  wt_col = "HHWT",
-  group_by = c("YEAR", "cluster")
-)
+hh_clustered <- hh_clustered |>
+  mutate(cluster_label = fct_recode(factor(cluster), !!!cluster_labels))
 
 cluster_labels <- c(
-  "1" = "Couple + Kids",
-  "2" = "Grandfamily",
-  "3" = "Roommates",
-  "4" = "Extended Family",
+  "1" = "Adult Child + Parent",
+  "2" = "Extended Family",
+  "3" = "Couples",
+  "4" = "Grandfamily",
   "5" = "Single-person",
-  "6" = "Adult Child + Parent"
+  "6" = "Many Children"
 )
 
 cluster_counts_year <- cluster_counts_year |>
@@ -109,15 +107,26 @@ ggplot(cluster_counts_year, aes(x = YEAR, y = weighted_count, color = cluster_la
   ) +
   theme_minimal(base_size = 14)
 
-cluster_counts_scaled <- cluster_counts_year |>
-  group_by(cluster_label) |>
-  mutate(
-    baseline_2023 = weighted_count[YEAR == 2023],
-    scaled_count = weighted_count / baseline_2023
-  ) |>
-  ungroup()
+hh_archetype_percent <- crosstab_percent(
+  data = hh_clustered,
+  wt_col = "HHWT",
+  group_by = c("YEAR", "cluster"),
+  percent_group_by = "YEAR"
+)
 
-ggplot(cluster_counts_scaled, aes(x = YEAR, y = scaled_count, color = cluster_label)) +
+hh_archetype_percent <- hh_archetype_percent |>
+  mutate(cluster_label = recode(factor(cluster), !!!cluster_labels))
+
+
+hh_archetype_percent_scaled <- hh_archetype_percent |>
+  group_by(cluster) |>
+  mutate(
+    baseline_2023 = percent[YEAR == 2023],
+    scaled_count = percent / baseline_2023
+  ) |>
+  ungroup() 
+
+ggplot(hh_archetype_percent_scaled, aes(x = YEAR, y = scaled_count, color = cluster_label)) +
   geom_line(size = 1.2) +
   geom_point(size = 2) +
   scale_color_brewer(palette = "Set2", name = "Household Type") +
@@ -130,3 +139,39 @@ ggplot(cluster_counts_scaled, aes(x = YEAR, y = scaled_count, color = cluster_la
   theme_minimal(base_size = 14) +
   theme(panel.grid.minor = element_blank())
 
+# Calculate mean, 5th and 95th percentile within each cluster for each var
+library(dplyr)
+library(Hmisc)  # for wtd.quantile
+
+summary_by_cluster <- hh_clustered |>
+  group_by(cluster) |>
+  summarise(
+    across(
+      .cols = c(n_spouse, n_child, n_parent, n_grandchild, n_other_rel, n_non_rel),
+      .fns = list(
+        mean = ~weighted.mean(.x, HHWT, na.rm = TRUE),
+        p5   = ~wtd.quantile(.x, weights = HHWT, probs = 0.05, na.rm = TRUE),
+        p95  = ~wtd.quantile(.x, weights = HHWT, probs = 0.95, na.rm = TRUE)
+      ),
+      .names = "{.col}_{.fn}"
+    )
+  )
+
+# Z score by clutser 
+# Attach z-scores if not done already
+z_scores <- as_tibble(ipums_household_scaled)
+colnames(z_scores) <- paste0(vars, "_z")
+
+hh_clustered_with_z <- hh_clustered |>
+  bind_cols(z_scores)
+
+# Summarize mean z-score per variable within each cluster
+cluster_z_profile <- hh_clustered_with_z |>
+  group_by(cluster) |>
+  summarise(
+    across(
+      .cols = ends_with("_z"),
+      .fns = ~mean(.x, na.rm = TRUE),  # unweighted, because z-scores already standardized
+      .names = "mean_{.col}"
+    )
+  )
