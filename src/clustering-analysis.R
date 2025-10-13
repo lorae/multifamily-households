@@ -44,7 +44,7 @@ kmeans_results <- list()
 # Loop over k values
 for (k in 1:15) {
   message("Running k-means for k = ", k, " ...")
-  km <- kmeans(ipums_household_tb, centers = k, nstart = 10)
+  km <- kmeans(ipums_household_scaled, centers = k, nstart = 10)
   kmeans_results[[as.character(k)]] <- km
   message("Completed k = ", k)
 }
