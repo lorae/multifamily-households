@@ -4,6 +4,10 @@ data/raw-microdata/**
 data/db/**
 !data/db/.gitkeep
 
+# ignore contents of throughput, but preserve file structure
+throughput/**
+!throughput/.gitkeep
+
 # History files
 .Rhistory
 .Rapp.history
