@@ -13,53 +13,8 @@ library("forcats")
 
 devtools::load_all("../demographr")
 
-con <- dbConnect(duckdb::duckdb(), "data/db/ipums.duckdb")
-ipums_household <- tbl(con, "ipums_household")
-
-set.seed(123)
-
-# Prepare data for k-means: select variables and scale
-# Variables to process
-vars <- c(
-  "n_spouse",
-  "n_child",
-  "n_parent",
-  "n_grandchild",
-  "n_other_rel",
-  "n_non_rel"
-)
-
-
-ipums_household_tb <- ipums_household |>
-  filter(GQ %in% c(0,1,2)) |>
-  select(YEAR, HHWT, all_of(vars)) |>
-  collect() 
-
-ipums_household_scaled <-  scale(ipums_household_tb |> select(-YEAR, -HHWT))
-
-
-# ----- elbow
-# Prepare a list to store all models
-kmeans_results <- list()
-
-# Loop over k values
-for (k in 1:15) {
-  message("Running k-means for k = ", k, " ...")
-  km <- kmeans(ipums_household_scaled, centers = k, nstart = 10)
-  kmeans_results[[as.character(k)]] <- km
-  message("Completed k = ", k)
-}
-
-# Extract within-cluster SS (for elbow plot)
-wss <- sapply(kmeans_results, function(x) x$tot.withinss)
-
-# Plot the elbow
-plot(1:15, wss, type = "b",
-     xlab = "Number of clusters (k)",
-     ylab = "Total within-cluster SS",
-     main = "Elbow Method")
-
-k_fit <- kmeans_results[["6"]]  # retrieve model for k = 6
+# Retrieve best fit model
+k_fit <- readRDS("throughput/k6-best-model.rds")
 
 # 1. Cluster centers (in scaled units)
 round(k_fit$centers, 2)
