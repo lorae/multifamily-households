@@ -109,12 +109,10 @@ for (var in vars) {
 
 write_csv(cluster_intervals_formatted, "output/tables/tab03-cluster-90pct-intervals.csv")
 
-
-
 # Cluster sizes
 cluster_sizes <- k_fit$size
 
-# ----- Step 2: Get cluster counts by years ----- #
+# ----- Step 4: Get cluster counts by years ----- #
 cluster_counts_year <- cluster_counts_year |>
   mutate(cluster_label = fct_recode(factor(cluster), !!!cluster_labels))
 
