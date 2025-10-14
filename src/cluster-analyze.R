@@ -72,8 +72,42 @@ cluster_percentile_list <- vars |>
   map(~ get_cluster_percentile(k_data, .x))
 
 
-#############
+# ----- Step 4: Export these tables ----- #
 
+# Export z-scores (cluster centers)
+cluster_centers_df <- as.data.frame(cluster_centers)
+cluster_centers_df <- cluster_centers_df |>
+  mutate(cluster = row_number(), .before = 1)
+
+write_csv(cluster_centers_df, "output/tables/tab01-cluster-zscores.csv")
+
+# Export means
+write_csv(cluster_means, "output/tables/tab02-cluster-means.csv")
+
+# Export 90% intervals (5th to 95th percentile)
+# Merge all percentile tables
+cluster_percentiles <- cluster_percentile_list |>
+  reduce(left_join, by = "cluster")
+
+# Reshape to show (low, high) format for each variable
+cluster_intervals <- cluster_percentiles |>
+  mutate(cluster = cluster, .before = 1)
+
+# Create a version with formatted intervals
+cluster_intervals_formatted <- tibble(cluster = cluster_percentiles$cluster)
+
+for (var in vars) {
+  p5_col <- paste0(var, "_p5")
+  p95_col <- paste0(var, "_p95")
+  
+  cluster_intervals_formatted <- cluster_intervals_formatted |>
+    mutate(
+      !!var := paste0("(", cluster_percentiles[[p5_col]], ", ", 
+                      cluster_percentiles[[p95_col]], ")")
+    )
+}
+
+write_csv(cluster_intervals_formatted, "output/tables/tab03-cluster-90pct-intervals.csv")
 
 
 
