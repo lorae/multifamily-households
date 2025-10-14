@@ -106,6 +106,12 @@ best_model_path <- "throughput/k6-best-model.rds"
 saveRDS(best_model, best_model_path)
 message("✅ Best-fit model saved to: ", best_model_path)
 
+# Raw data with cluster labels
+labelled_cluster_path <- "throughput/k6-best-model-cluster-labels.rds"
+labelled_clusters <- ipums_household_tb |> mutate(cluster = k_fit$cluster)
+saveRDS(labelled_clusters, labelled_cluster_path)
+message("✅ Labelled clusters saved to: ", labelled_cluster_path)
+
 # All models
 all_models_path <- paste0("throughput/k6-all-models-", timestamp, ".rds")
 saveRDS(fit_results, all_models_path)
