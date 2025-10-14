@@ -102,7 +102,7 @@ ggsave(fig06_path, width = 6, height = 4, dpi = 300)
 message("✅ Diagnostic plot saved to: ", fig06_path)
         
 # Best-fit model object
-best_model_path <- paste0("throughput/k6-best-model-", timestamp, ".rds")
+best_model_path <- "throughput/k6-best-model.rds"
 saveRDS(best_model, best_model_path)
 message("✅ Best-fit model saved to: ", best_model_path)
 
