@@ -16,19 +16,14 @@ devtools::load_all("../demographr")
 # Retrieve best fit model
 k_fit <- readRDS("throughput/k6-best-model.rds")
 
-# 1. Cluster centers (in scaled units)
-round(k_fit$centers, 2)
+# ----- Step 1: get properties, categorize ----- #
+# Cluster centers (z scores)
+cluster_centers <- round(k_fit$centers, 2)
 
-# 2. Cluster sizes
-k_fit$size
+# Cluster sizes
+cluster_sizes <- k_fit$size
 
-# 3. Total within-cluster sum of squares
-k_fit$tot.withinss
-
-# 4. Between-cluster sum of squares ratio (a quick fit metric)
-k_fit$betweenss / k_fit$totss
-
-
+# ----- Step 2: Get cluster counts by years ----- #
 cluster_counts_year <- cluster_counts_year |>
   mutate(cluster_label = fct_recode(factor(cluster), !!!cluster_labels))
 
