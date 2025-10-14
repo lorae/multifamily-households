@@ -37,26 +37,46 @@ get_cluster_mean <- function(data, var_name) {
     rename(!!var_name := weighted_mean)
 }
 
-cluster_summary <- vars |>
-  map(~ get_cluster_mean(k_data, .x)) |>
-  reduce(left_join, by = "cluster")vars <- c("n_spouse", "n_child", "n_parent", "n_grandchild", "n_other_rel", "n_non_rel")
-
-get_cluster_mean <- function(data, var_name) {
-  crosstab_mean(
-    data,
-    value = var_name,
-    wt_col = "HHWT",
-    group_by = "cluster"
-  ) |>
-    select(cluster, weighted_mean) |>
-    rename(!!var_name := weighted_mean)
-}
-
-cluster_summary <- vars |>
+cluster_means <- vars |>
   map(~ get_cluster_mean(k_data, .x)) |>
   reduce(left_join, by = "cluster")
   
-  
+# ----- Step 3: Get 5th percentile and 95th percentile within each cluster ----- #
+# Weighted quantile helper (internal)
+weighted_quantile <- function(x, w, probs = c(0.05, 0.95)) {
+  df <- tibble(x = x, w = w) |> filter(!is.na(x) & !is.na(w))
+  df <- df |> arrange(x) |> mutate(w_cum = cumsum(w) / sum(w))
+  sapply(probs, function(p) {
+    idx <- which.min(abs(df$w_cum - p))
+    df$x[idx]
+  })
+}
+
+# Function to get weighted percentiles for a single variable
+get_cluster_percentile <- function(data, var_name) {
+  data |>
+    group_by(cluster) |>
+    summarise(
+      p5  = weighted_quantile(.data[[var_name]], HHWT, probs = 0.05)[1],
+      p95 = weighted_quantile(.data[[var_name]], HHWT, probs = 0.95)[1],
+      .groups = "drop"
+    ) |>
+    rename(
+      !!paste0(var_name, "_p5")  := p5,
+      !!paste0(var_name, "_p95") := p95
+    )
+}
+
+# Apply to all vars and merge into one wide table
+cluster_percentile_list <- vars |>
+  map(~ get_cluster_percentile(k_data, .x))
+
+
+#############
+
+
+
+
 # Cluster sizes
 cluster_sizes <- k_fit$size
 
