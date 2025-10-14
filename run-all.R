@@ -18,5 +18,7 @@ source("src/figures/fig04-hoh-housemates-normalized-line.R")
 # k-means ML
 source("src/cluster-elbow-plot.R") # choose k from k=1 to k=15 (outputs fig05)
 source("src/cluster-k6-selection.R") # choose among k = 6 model outputs
+source("src/cluster-analyze.R") # analyze the best fit k = 6 model
+
 
 
