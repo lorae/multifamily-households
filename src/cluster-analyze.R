@@ -15,11 +15,48 @@ devtools::load_all("../demographr")
 
 # Retrieve best fit model
 k_fit <- readRDS("throughput/k6-best-model.rds")
+k_data <- readRDS("throughput/k6-best-model-cluster-labels.rds")
 
-# ----- Step 1: get properties, categorize ----- #
+# ----- Step 1: get z-score cluster centers ----- #
 # Cluster centers (z scores)
 cluster_centers <- round(k_fit$centers, 2)
 
+# ----- Step 2: Get mean cluster centers ----- #
+# in units of persons
+
+vars <- c("n_spouse", "n_child", "n_parent", "n_grandchild", "n_other_rel", "n_non_rel")
+
+get_cluster_mean <- function(data, var_name) {
+  crosstab_mean(
+    data,
+    value = var_name,
+    wt_col = "HHWT",
+    group_by = "cluster"
+  ) |>
+    select(cluster, weighted_mean) |>
+    rename(!!var_name := weighted_mean)
+}
+
+cluster_summary <- vars |>
+  map(~ get_cluster_mean(k_data, .x)) |>
+  reduce(left_join, by = "cluster")vars <- c("n_spouse", "n_child", "n_parent", "n_grandchild", "n_other_rel", "n_non_rel")
+
+get_cluster_mean <- function(data, var_name) {
+  crosstab_mean(
+    data,
+    value = var_name,
+    wt_col = "HHWT",
+    group_by = "cluster"
+  ) |>
+    select(cluster, weighted_mean) |>
+    rename(!!var_name := weighted_mean)
+}
+
+cluster_summary <- vars |>
+  map(~ get_cluster_mean(k_data, .x)) |>
+  reduce(left_join, by = "cluster")
+  
+  
 # Cluster sizes
 cluster_sizes <- k_fit$size
 
