@@ -47,6 +47,11 @@ cluster_percents_rel_1900 <- cluster_percents_year |>
   mutate(rel_percent = percent / percent[YEAR == 1900]) |>
   ungroup()
 
+cluster_percents_rel_2023 <- cluster_percents_year |>
+  group_by(cluster_name) |>
+  mutate(rel_percent = percent / percent[YEAR == 2023]) |>
+  ungroup()
+
 
 # Reusable graphing function
 plot_cluster_trends <- function(data, y_var, y_label, title, palette = "Set2") {
@@ -81,17 +86,26 @@ plot_percents <- plot_cluster_trends(
 )
 
 # 3. Relative to 1900 baseline
-plot_relative <- plot_cluster_trends(
+plot_relative1900 <- plot_cluster_trends(
   data = cluster_percents_rel_1900,
   y_var = "rel_percent",
   y_label = "Relative to 1900 (1.0 = baseline)",
   title = "Household Archetype Trends Relative to 1900"
 )
 
+# 4. Relative to 2023 baseline
+plot_relative2023 <- plot_cluster_trends(
+  data = cluster_percents_rel_2023,
+  y_var = "rel_percent",
+  y_label = "Relative to 2023 (1.0 = baseline)",
+  title = "Household Archetype Trends Relative to 2023"
+)
+
 # Display the plots
 plot_counts
 plot_percents
-plot_relative
+plot_relative1900
+plot_relative2023
 
 # ----- SAVE! ----- #
 # Save the plots as JPEGs (6" x 6")
@@ -108,7 +122,13 @@ ggsave("output/figures/fig08-household-percents-time-line.jpg",
        scale = 1.25)
 
 ggsave("output/figures/fig09-household-relative-1900-line.jpg", 
-       plot_relative, 
+       plot_relative1900, 
+       width = 6, height = 6, 
+       dpi = 300,
+       scale = 1.25)
+
+ggsave("output/figures/fig10-household-relative-2023-line.jpg", 
+       plot_relative2023, 
        width = 6, height = 6, 
        dpi = 300,
        scale = 1.25)
@@ -122,4 +142,7 @@ write_csv(cluster_percents_year,
 
 write_csv(cluster_percents_rel_1900, 
           "output/figure-data/fig09-household-relative-1900-line.csv")
+
+write_csv(cluster_percents_rel_2023, 
+          "output/figure-data/fig10-household-relative-2023-line.csv")
 
