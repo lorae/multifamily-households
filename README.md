@@ -1,15 +1,10 @@
-# 🏘️ Households Over the Years
-How has household size and configuration changed in the last 125 years? We answer this question 
-using publicly available American Community Survey and Decennial Census data, accessed 
-via IPUMS, alongside the analytic tools available in the [demographR](https://github.com/lorae/demographr) package.
+# 👪 👪 Multifamily Households
+A multifamily household is one where multiple individual family units live in the same household, under the same roof. Our analysis shows that over 1 in 5 Americans lived in such a household in the 1900s, followed by a steep decline through the 20th century until the 1970s, when only 1 in 40 Americans lived in a household with at least one other family. However, especially during the 1970s, this multifamily share rose, and today, roughly 7-8% of Americans live under the same roof as at least one other family.
 
-## 📊 Key Findings
+![](output/figures/fig03-multifam-decades-line.jpeg)
 
-The average American at the turn of the 20th century lived in a household with nearly 
-6 individuals. With some exceptions, that value has since been on the decline, with the
-rate of decrease in household size much slower in recent decades than during most of 
-the 20th century. As of 2023, the average American lives in a household of 3.33 persons.
-![](output/figures/fig01-hhsize-decades-line.jpeg)
+Who accounts for this rising multifmaily household share, and what does it say about the changing socioeconomic landscape of the United States? We aim to study this question using publicly available American Community Survey and Decennial Census data, accessed via IPUMS, alongside the analytic tools available in the [demographR](https://github.com/lorae/demographr) package.
+
 
 ## ⚡ Quick Start
 For experienced users who just want to get the project running right away. If you
