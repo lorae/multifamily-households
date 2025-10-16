@@ -1,6 +1,4 @@
-# fig07-multifam-decades-race-line
-# 
-# Plot average person-level household size over the decades in aggregate.
+# fig09-multifam-decades-age-line
 #
 # ----- Step 0: Configuration ----- #
 library("dplyr")
@@ -14,40 +12,39 @@ devtools::load_all("../demographr")
 con <- dbConnect(duckdb::duckdb(), "data/db/ipums.duckdb")
 ipums_person <- tbl(con, "ipums_person")
 
-multifam_decade_race <- crosstab_percent(
+multifam_decade_age <- crosstab_percent(
   data = ipums_person |> filter(GQ %in% c(0,1,2)),
   wt_col = "PERWT",
-  group_by = c("is_multifam", "YEAR", "race_eth"),
-  percent_group_by = c("YEAR", "race_eth")
+  group_by = c("is_multifam", "YEAR", "age_bucket"),
+  percent_group_by = c("YEAR", "age_bucket")
 ) |>
   filter(is_multifam) |>
-  filter(race_eth %in% c("White", "Black", "AAPI", "Hispanic", "AIAN")) |>
   arrange(YEAR)
 
 # ----- Graph ----- #
-fig07 <- multifam_decade_race |>
+fig09 <- multifam_decade_age |>
   ggplot(aes(
     x = YEAR,
-    y = percent/100,
-    color = race_eth,
-    group = race_eth
+    y = percent / 100,
+    color = age_bucket,
+    group = age_bucket
   )) +
   geom_line(size = 1.2) +
   geom_point(size = 2) +
   scale_color_manual(
-    name = "Race / Ethnicity",
+    name = "Age Group",
     values = c(
-      "White"    = "#7fc97f",
-      "Black"    = "#beaed4",
-      "Hispanic" = "#fdc086",
-      "AAPI"     = "#ff9299",
-      "AIAN"     = "#5c4522"
+      "17 or younger" = "#5BC0EB",  # light sky blue
+      "18-29"         = "#0081A7",  # medium teal
+      "30-49"         = "#F4D35E",  # warm yellow
+      "50-65"         = "#EE964B",  # amber
+      "65 and older"  = "#9B2226"   # deep red-brown
     )
   ) +
   scale_x_continuous(breaks = seq(1900, 2020, by = 10)) +
   scale_y_continuous(labels = percent_format(accuracy = 1)) +
   labs(
-    title = "Share of Americans Living in Multifamily Households by Race/Ethnicity",
+    title = "Share of Americans Living in Multifamily Households by Age Group",
     x = "Year",
     y = "Percent of Americans"
   ) +
@@ -58,18 +55,18 @@ fig07 <- multifam_decade_race |>
     legend.title = element_text(face = "bold")
   )
 
-fig07
+fig09
 
 # ----- Step 3: Save data and plot ----- #
 
 write_csv(
-  multifam_decade_race,
-  "output/figure-data/fig07-multifam-decades-race-line.csv"
+  multifam_decade_age,
+  "output/figure-data/fig09-multifam-decades-age-line.csv"
 )
 
 ggsave(
-  filename = "output/figures/fig07-multifam-decades-race-line.jpeg",
-  plot = fig07,
+  filename = "output/figures/fig09-multifam-decades-age-line.jpeg",
+  plot = fig09,
   width = 6,
   height = 4,
   dpi = 500,
