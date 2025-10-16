@@ -39,7 +39,7 @@ get_sample_info("usa") |> print(n=200)
 
 # Define extract
 ipums_extract <- define_extract_micro(
-  description = "Households over the years",
+  description = "Multifamily households, 1900 - 2023",
   collection = "usa",
   samples = c(
     # For more info see https://usa.ipums.org/usa/sampdesc.shtml
