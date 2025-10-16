@@ -17,14 +17,14 @@ have trouble following these steps, please follow the **Detailed Start** guide b
     ```
 
     ```bash
-    git clone https://github.com/lorae/households-over-the-years households-over-the-years
+    git clone https://github.com/lorae/multifamily-households multifamily-households
     git clone https://github.com/lorae/demographr demographr
     ```
 
 2. Enter the main project
 
     ```bash
-    cd households-over-the-years
+    cd multifamily-households
     ```
 
 3. Copy the environment file and edit it with your own [IPUMS API key](https://account.ipums.org/api_keys)
@@ -37,7 +37,7 @@ have trouble following these steps, please follow the **Detailed Start** guide b
 
 4. Restore dependencies and run the analysis
 
-    Open `households-over-the-years.Rproj` in your preferred IDE, then in the R console:
+    Open `multifamily-households.Rproj` in your preferred IDE, then in the R console:
     
     ```r
     renv::restore()
@@ -61,7 +61,7 @@ These steps will allow you to install the code on your computer that runs this p
     cd your/path/to/parent/directory
     ```
     ```bash
-    git clone https://github.com/lorae/households-over-the-years households-over-the-years
+    git clone https://github.com/lorae/multifamily-households multifamily-households
     ```
     
     Windows:
@@ -70,13 +70,13 @@ These steps will allow you to install the code on your computer that runs this p
     cd your\path\to\parent\directory
     ```
     ```cmd
-    git clone https://github.com/lorae/households-over-the-years households-over-the-years
+    git clone https://github.com/lorae/multifamily-households multifamily-households
     ```
 
-2. **Open the R project**: Navigate into the directory, now located at `your/path/to/parent/directory/households-over-the-years`.
-Open `households-over-the-years.Rproj` using your preferred IDE for R. (We use R Studio.)
+2. **Open the R project**: Navigate into the directory, now located at `your/path/to/parent/directory/multifamily-households`.
+Open `multifamily-households.Rproj` using your preferred IDE for R. (We use R Studio.)
 
-    Every subsequent time you work with the project code, you should always open the `households-over-the-years.Rproj` file
+    Every subsequent time you work with the project code, you should always open the `multifamily-households.Rproj` file
     at the beginning of your work session. This will avoid common issues with broken file paths or an incorrect working directory.
 
 3. **Initialize R environment**: Install all the dependencies (packages) needed to make the code run on your computer.
@@ -101,7 +101,7 @@ and generalized in a package called `demographr`. Clone this repo in the same pa
 `immigrant-households`.
 
     🛑 Important: Do not clone this **inside** of the `immigrant-households` repo: instead, it should be a 
-    sibling: it should contained in the same folder structure as `households-over-the-years`.
+    sibling: it should contained in the same folder structure as `multifamily-households`.
 
     MacOS/Linux:
     
@@ -175,5 +175,5 @@ MIT License (see LICENSE file).
 This repository accompanies ongoing research on households and household size. 
 
 For now, please cite as:  
-*Households Over the Years: Replication Code and Analysis*. Maintained by Lorae Stojanovic and Peter Hepburn.  
-GitHub. https://github.com/lorae/households-over-the-years
+*Multifamily Households: Replication Code and Analysis*. Maintained by Lorae Stojanovic and Peter Hepburn.  
+GitHub. https://github.com/lorae/multifamily-households
