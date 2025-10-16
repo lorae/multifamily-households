@@ -1,5 +1,5 @@
 # 👪 👪 Multifamily Households
-A multifamily household is one where multiple individual family units live in the same household, under the same roof. Our analysis shows that over 1 in 5 Americans lived in such a household in the 1900s, followed by a steep decline through the 20th century until the 1970s, when only 1 in 40 Americans lived in a household with at least one other family. However, especially during the 1970s, this multifamily share rose, and today, roughly 7-8% of Americans live under the same roof as at least one other family.
+A multifamily household is one where multiple individual family units, related by blood or marriage, live in same housing unit (e.g. house or apartment). Our analysis shows that over 1 in 5 Americans lived in such a household in the 1900s, followed by a steep decline through the 20th century until the 1970s, when only 1 in 40 Americans lived in a household with at least one other family. However, especially during the 1970s, this multifamily share rose, and today, roughly 7-8% of Americans live under the same roof as at least one other family.
 
 ![](output/figures/fig03-multifam-decades-line.jpeg)
 
