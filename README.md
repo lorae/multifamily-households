@@ -1,4 +1,4 @@
-# 👪 👪 Multifamily Households
+# 👪👪 Multifamily Households
 A multifamily household is one where multiple individual [family units](https://usa.ipums.org/usa-action/variables/NFAMS#description_section), related by blood or marriage, live in same [dwelling unit](https://cps.ipums.org/cps/sample_designs.shtml#:~:text=A%20dwelling%20unit%20is%20a%20room%20or,dwelling%20units%20used%20in%20recent%20U.S.%20censuses.) (e.g. a single house or apartment). Our analysis shows that over 1 in 5 Americans lived in multifamily households in the 1900s, followed by a steep decline through the 20th century until the 1970s, when only 1 in 40 Americans lived in multifamily households. The multifamily share subsequently rose, with roughly 7-8% of Americans living under the same roof as at least one other family as of 2023.
 
 ![](output/figures/fig03-multifam-decades-line.jpeg)
