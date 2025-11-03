@@ -45,7 +45,8 @@ results_filtered <- results |>
                        "race_ethBlack" = "Black",
                        "race_ethHispanic" = "Hispanic",
                        "race_ethWhite" = "White"
-  ))
+  )) |>
+  mutate(term = factor(term, levels = c("Hispanic", "AIAN", "AAPI", "Black", "White"))) # This orders labels in legend
 
 # Plot
 ggplot(results_filtered, aes(x = YEAR, y = estimate, color = term)) +
@@ -53,17 +54,17 @@ ggplot(results_filtered, aes(x = YEAR, y = estimate, color = term)) +
   geom_point(size = 1.8) +
   theme_minimal(base_size = 14) +
   labs(
-    title = "Regression Coefficients Over Time",
+    title = "Probability of Multifamily Living Over Time, by Race/Ethnicity",
     x = "Year",
     y = "LPM Estimate: Probability of Multifamily Living",
     color = "Term"
   ) +
   scale_color_manual(values = c(
-    "AAPI" = "black",
-    "AIAN" = "#E69F00",
-    "Black" = "#56B4E9",
-    "Hispanic" = "#009E73",
-    "White" = "violet"
+    "Hispanic" = "#acfa70",
+    "AIAN" = "#00cf97",
+    "AAPI" = "#0097a3",
+    "Black" = "#006290",
+    "White" = "#292f56"
   )) +
   theme(
     plot.title = element_text(face = "bold", hjust = 0.5),
