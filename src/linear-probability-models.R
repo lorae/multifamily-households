@@ -48,7 +48,7 @@ results_filtered <- results |>
   )) |>
   mutate(term = factor(term, levels = c("Hispanic", "AIAN", "AAPI", "Black", "White"))) # This orders labels in legend
 
-# Plot
+# Base Plot
 ggplot(results_filtered, aes(x = YEAR, y = estimate, color = term)) +
   geom_line(linewidth = 1) +
   geom_point(size = 1.8) +
@@ -70,3 +70,68 @@ ggplot(results_filtered, aes(x = YEAR, y = estimate, color = term)) +
     plot.title = element_text(face = "bold", hjust = 0.5),
     legend.position = "bottom"
   )
+
+
+# ----- Variable Bundles ----- #
+
+# Age, Sex (basic demographics)
+
+# Number of people in own subfamily
+
+# Income, education
+
+# Geography
+
+# ---- Basic demographic controls ----- #
+
+results_demo <- map_dfr(years, function(y) {
+  dat <- ipums_person |>
+    filter(YEAR == y) |>
+    select(is_multifam, race_eth, age_bucket, SEX, PERWT) |>
+    collect() |>
+    filter(!is.na(is_multifam), !is.na(race_eth), !is.na(PERWT)) |>
+    mutate(race_eth = factor(race_eth))  # 👈 force factor
+  
+  baseline <- levels(dat$race_eth)[1]
+  message("Baseline for ", y, ": ", baseline)
+  
+  fit <- lm(is_multifam ~ -1 + race_eth + age_bucket + SEX, data = dat, weights = PERWT)
+  broom::tidy(fit) |> mutate(YEAR = y, baseline = baseline)
+})
+
+results_demo_filtered <- results_demo |> 
+  filter(term %in% c("race_ethAAPI", "race_ethAIAN", "race_ethBlack", "race_ethHispanic", "race_ethWhite")) |>
+  arrange(term, YEAR) |>
+  mutate(term = recode(term,
+                       "race_ethAAPI" = "AAPI",
+                       "race_ethAIAN" = "AIAN",
+                       "race_ethBlack" = "Black",
+                       "race_ethHispanic" = "Hispanic",
+                       "race_ethWhite" = "White"
+  )) |>
+  mutate(term = factor(term, levels = c("Hispanic", "AIAN", "AAPI", "Black", "White"))) # This orders labels in legend
+
+# With Age and SEx controls
+ggplot(results_demo_filtered, aes(x = YEAR, y = estimate, color = term)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 1.8) +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Probability of Multifamily Living Over Time, by Race/Ethnicity \nWith Age and Sex Controls",
+    x = "Year",
+    y = "LPM Estimate: Probability of Multifamily Living",
+    color = "Term"
+  ) +
+  scale_color_manual(values = c(
+    "Hispanic" = "#acfa70",
+    "AIAN" = "#00cf97",
+    "AAPI" = "#0097a3",
+    "Black" = "#006290",
+    "White" = "#292f56"
+  )) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    legend.position = "bottom"
+  )
+
+
