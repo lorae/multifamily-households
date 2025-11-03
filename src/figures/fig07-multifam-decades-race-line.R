@@ -21,7 +21,8 @@ multifam_decade_race <- crosstab_percent(
   percent_group_by = c("YEAR", "race_eth")
 ) |>
   filter(is_multifam) |>
-  filter(race_eth %in% c("White", "Black", "AAPI", "Hispanic", "AIAN")) |>
+  filter(race_eth %in% c("White", "Black", "Hispanic")) |>
+                         #"AAPI", "AIAN"
   arrange(YEAR)
 
 # ----- Graph ----- #
@@ -39,9 +40,9 @@ fig07 <- multifam_decade_race |>
     values = c(
       "White"    = "#7fc97f",
       "Black"    = "#beaed4",
-      "Hispanic" = "#fdc086",
-      "AAPI"     = "#ff9299",
-      "AIAN"     = "#5c4522"
+      "Hispanic" = "#fdc086" #,
+      # "AAPI"     = "#ff9299",
+      # "AIAN"     = "#5c4522"
     )
   ) +
   scale_x_continuous(breaks = seq(1900, 2020, by = 10)) +
