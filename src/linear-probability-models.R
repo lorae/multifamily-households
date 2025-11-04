@@ -63,8 +63,8 @@ filter_by_race <- function(result) {
 }
 
 # Step C: graph the results
-plot_race_trends <- function(results, title) {
-  results |>
+plot_race_trends <- function(results, title, ymin = NULL, ymax = NULL) {
+  p <- results |>
     ggplot(aes(x = YEAR, y = estimate, color = term)) +
     geom_line(linewidth = 1) +
     geom_point(size = 1.8) +
@@ -86,26 +86,44 @@ plot_race_trends <- function(results, title) {
       plot.title = element_text(face = "bold", hjust = 0.5),
       legend.position = "bottom"
     )
+  
+  # Add y-axis limits only if at least one is specified
+  if (!is.null(ymin) || !is.null(ymax)) {
+    p <- p + coord_cartesian(ylim = c(ymin, ymax))
+  }
+  
+  return(p)
 }
+
 
 # ----- Step 2: Produce results ----- #
 # Base model
 base_model_plot <- run_lpm_by_year() |>
   filter_by_race() |>
-  plot_race_trends(title = "Probability of multifamily living over time, by race/ethnicity")
+  plot_race_trends(title = "Probability of multifamily living over time, by race/ethnicity\n.",
+                   ymin = 0, ymax = 0.14)
 
 base_model_plot
 
 # Basic demographics model: age, sex
-basic_demo_plot <- run_lpm_by_year(controls = c("age_bucket", "SEX")) |>
+demo_plot <- run_lpm_by_year(controls = c("age_bucket", "SEX")) |>
+  filter_by_race() |>
+  plot_race_trends(title = "Probability of multifamily living over time, by race/ethnicity \nwith age and sex controls",
+                   ymin = 0, ymax = 0.14)
+
+demo_plot
+
+# SES inputs: income, education
+
+demo_ses_plot <- run_lpm_by_year(controls = c("age_bucket", "SEX", )) |>
   filter_by_race() |>
   plot_race_trends(title = "Probability of multifamily living over time, by race/ethnicity \nwith age and sex controls")
 
-basic_demo_plot
-
-# SES inputs: income, education
+demo_ses_plot
 
 # Number of people in own subfamily
 
 # Geography
+
+# outcomes: housing unit attributes such as kitchen, unitsstr, room, bedroom, ppbr
 
