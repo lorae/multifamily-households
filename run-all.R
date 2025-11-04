@@ -14,3 +14,6 @@ source("src/figures/fig01-hhsize-decades-line.R")
 source("src/figures/fig02-household-members.R")
 source("src/figures/fig03-multifam-decades-line.R")
 source("src/figures/fig04-hoh-housemates-normalized-line.R")
+
+# Linear probability models
+source("src/linear-probability-models.R")
