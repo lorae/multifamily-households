@@ -41,6 +41,9 @@ ipums_household <- ipums_person |>
     GQ = first(GQ),
     HHWT = first(HHWT),
     
+    # Household income
+    hhinc_harmonized = sum(inctot_harmonized, na.rm = TRUE),
+    
     # Household composition
     n_adults = sum(AGE >= 18, na.rm = TRUE),
     n_children = sum(AGE < 18, na.rm = TRUE),

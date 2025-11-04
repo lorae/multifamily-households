@@ -12,7 +12,7 @@ library("scales")
 devtools::load_all("../demographr")
 
 con <- dbConnect(duckdb::duckdb(), "data/db/ipums.duckdb")
-ipums_person <- tbl(con, "ipums_person")
+ipums_person <- tbl(con, "ipums_person_with_hh")
 
 library(dplyr)
 library(purrr)
@@ -22,8 +22,7 @@ library(broom)
 # Step A: Run a linear probability model each year
 run_lpm_by_year <- function(tbl = ipums_person, controls = NULL, outcome = "is_multifam") {
   years <- tbl |> distinct(YEAR) |> collect() |> pull(YEAR)
-  ipums_person <- tbl(con, "ipums_person")
-  
+
   map_dfr(years, function(y) {
     dat <- ipums_person |>
       filter(YEAR == y) |>
@@ -98,27 +97,30 @@ plot_race_trends <- function(results, title, ymin = NULL, ymax = NULL) {
 
 # ----- Step 2: Produce results ----- #
 # Base model
-base_model_plot <- run_lpm_by_year() |>
-  filter_by_race() |>
-  plot_race_trends(title = "1: Probability of multifamily living over time, by race/ethnicity\no controls",
-                   ymin = 0, ymax = 0.15)
+base_model_data <- run_lpm_by_year() |>
+  filter_by_race() 
+base_model_plot <- base_model_data |>
+  plot_race_trends(title = "1: Probability of multifamily living over time, by race/ethnicity\nno controls",
+                   ymin = -0.02, ymax = 0.16)
 
 base_model_plot
 
 # Basic demographics model: age, sex
-demo_plot <- run_lpm_by_year(controls = c("age_bucket", "SEX")) |>
-  filter_by_race() |>
+demo_data <- run_lpm_by_year(controls = c("age_bucket", "SEX")) |>
+  filter_by_race() 
+demo_plot <- demo_data |>
   plot_race_trends(title = "2: Probability of multifamily living over time, by race/ethnicity \nwith age and sex controls",
-                   ymin = 0, ymax = 0.15)
+                   ymin = -0.02, ymax = 0.16)
 
 demo_plot
 
 # SES inputs: income, education
 
-demo_ses_plot <- run_lpm_by_year(controls = c("age_bucket", "SEX", "inctot_inflated")) |>
-  filter_by_race() |>
-  plot_race_trends(title = "3: Probability of multifamily living over time, by race/ethnicity \nwith age, sex, and personal income controls",
-                   ymin = 0, ymax = 0.15)
+demo_ses_data <- run_lpm_by_year(controls = c("age_bucket", "SEX", "hhinc_harmonized")) |>
+  filter_by_race() 
+demo_ses_plot <- demo_ses_data |>
+  plot_race_trends(title = "3: Probability of multifamily living over time, by race/ethnicity \nwith age, sex, and household income controls",
+                   ymin = -0.02, ymax = 0.16)
 
 demo_ses_plot
 

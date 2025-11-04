@@ -93,7 +93,7 @@ ipums_person <- ipums_db |>
       race_bucket == "other" ~ "Other"
     ),
     # See README for documentation on this procedure.
-    inctot_inflated = case_when(
+    inctot_harmonized = case_when(
       # Missing values
       INCTOT == 9999999 ~ NA_real_,
       
@@ -109,7 +109,7 @@ ipums_person <- ipums_db |>
       YEAR == 2021 & INCTOT <= -17776 ~ -19998,
       YEAR == 2023 & INCTOT <= -19998 ~ -19998,
       
-      # Top-coded values — harmonized to 2023 top code
+      # Top-coded values — harmonized to 1960 top code
       YEAR == 1960 & INCTOT >= 25000 ~ 257150,
       YEAR == 1970 & INCTOT >= 32791 ~ 257150,
       YEAR == 1980 & INCTOT >= 69556 ~ 257150,
