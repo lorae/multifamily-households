@@ -165,6 +165,40 @@ The code for this project is stored in the `src` folder:
     source("run-all.R")
     ```
     
+## A note on income encoding
+
+Income is surprisingly difficult to track reliably through the decades. Not only do social programs such as Medicare come to
+be during the study period, but also the questions asked around income become more specific and thorough over time. For example, in 1960, 
+the `INCTOT` variable we use in this research was the sum of wage income (`INCWAGE`), business and farm income (`INCBUSFM`) and 
+other income (`INCOTHER`). By 1990, this list included the original 3 (with business and farm income now split into separate categories)
+As well as 4 additional income variables. For the sake of initial tractable findings in this research, we have chosen to use the 
+`INCTOT` variable with no subtractions, but in the future we may consider only including the original three variables over time and other
+potential variations of income to test robustness of our findings.
+
+Income variables are subject to both top- and bottom-coding, which vary by census year. To ensure comparability, we adjust all 
+monetary values to 2023 dollars and harmonize top and bottom codes accordingly. IPUMS provides a CPI99 variable for inflation 
+adjustment, but it only extends back to 1962. To include 1960 data, we instead use the Consumer Price Index (CPI-U) series from the 
+Federal Reserve Economic Data (FRED), which begins in 1913. We transform this series into 2023-dollar equivalents, with calculations 
+and the data series used documented [here](https://fred.stlouisfed.org/graph/?g=1NDUr).
+
+We recode the special missing value (`999999`) as `NA`. Then, after computing inflation factors, we identify which year’s top and 
+bottom codes are most restrictive. As shown in the table below, 2023's bottom code of $19,998 is most restrictive, and 1960's top 
+code of $257,150 is most restrictive. We inflate / deflate these factors accordingly and those uniform standards to all data.
+
+**Inflation and Coding Reference Table**
+
+| Year | Inflation Factor (2023 $ per $1) | Bottom Code | Bottom Code (2023 $) | Top Code | Top Code (2023 $) |
+|------|----------------------------------:|-------------:|---------------------:|----------:|------------------:|
+| 1960 | 10.286 | -$9,900  | -$101,831 | $25,000  | $257,150 |
+| 1970 | 7.842  | -$9,900  | -$77,636  | $50,000  | $392,100 |
+| 1980 | 3.697  | -$9,995  | -$36,951  | $75,000  | $277,275 |
+| 1990 | 2.333  | -$19,998 | -$46,655  | $400,000 | $933,200 |
+| 2000 | 1.769  | -$20,000 | -$35,380  | $999,998 | $1,768,996 |
+| 2006 | 1.511  | -$19,998 | -$30,216  | none     | none     |
+| 2011 | 1.355  | -$19,998 | -$27,097  | none     | none     |
+| 2016 | 1.269  | -$19,998 | -$25,377  | none     | none     |
+| 2021 | 1.125  | -$19,998 | -$22,498  | none     | none     |
+| 2023 | 1.000  | -$19,998 | -$19,998  | none     | none     |
 
 
 ## 📜 License
