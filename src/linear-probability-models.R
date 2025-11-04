@@ -100,24 +100,25 @@ plot_race_trends <- function(results, title, ymin = NULL, ymax = NULL) {
 # Base model
 base_model_plot <- run_lpm_by_year() |>
   filter_by_race() |>
-  plot_race_trends(title = "Probability of multifamily living over time, by race/ethnicity\n.",
-                   ymin = 0, ymax = 0.14)
+  plot_race_trends(title = "1: Probability of multifamily living over time, by race/ethnicity\no controls",
+                   ymin = 0, ymax = 0.15)
 
 base_model_plot
 
 # Basic demographics model: age, sex
 demo_plot <- run_lpm_by_year(controls = c("age_bucket", "SEX")) |>
   filter_by_race() |>
-  plot_race_trends(title = "Probability of multifamily living over time, by race/ethnicity \nwith age and sex controls",
-                   ymin = 0, ymax = 0.14)
+  plot_race_trends(title = "2: Probability of multifamily living over time, by race/ethnicity \nwith age and sex controls",
+                   ymin = 0, ymax = 0.15)
 
 demo_plot
 
 # SES inputs: income, education
 
-demo_ses_plot <- run_lpm_by_year(controls = c("age_bucket", "SEX", )) |>
+demo_ses_plot <- run_lpm_by_year(controls = c("age_bucket", "SEX", "inctot_inflated")) |>
   filter_by_race() |>
-  plot_race_trends(title = "Probability of multifamily living over time, by race/ethnicity \nwith age and sex controls")
+  plot_race_trends(title = "3: Probability of multifamily living over time, by race/ethnicity \nwith age, sex, and personal income controls",
+                   ymin = 0, ymax = 0.15)
 
 demo_ses_plot
 

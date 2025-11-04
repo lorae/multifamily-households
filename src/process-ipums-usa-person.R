@@ -91,6 +91,49 @@ ipums_person <- ipums_db |>
       race_bucket == "multi" ~ "Multiracial",
       race_bucket == "white" ~ "White",
       race_bucket == "other" ~ "Other"
+    ),
+    # See README for documentation on this procedure.
+    inctot_inflated = case_when(
+      # Missing values
+      INCTOT == 9999999 ~ NA_real_,
+      
+      # Bottom-coded values — harmonized to 2023 bottom code
+      YEAR == 1960 & INCTOT <= -1944 ~ -19998,
+      YEAR == 1970 & INCTOT <= -2550 ~ -19998,
+      YEAR == 1980 & INCTOT <= -5409 ~ -19998,
+      YEAR == 1990 & INCTOT <= -8572 ~ -19998,
+      YEAR == 2000 & INCTOT <= -11305 ~ -19998,
+      YEAR == 2006 & INCTOT <= -13234 ~ -19998,
+      YEAR == 2011 & INCTOT <= -14759 ~ -19998,
+      YEAR == 2016 & INCTOT <= -15759 ~ -19998,
+      YEAR == 2021 & INCTOT <= -17776 ~ -19998,
+      YEAR == 2023 & INCTOT <= -19998 ~ -19998,
+      
+      # Top-coded values — harmonized to 2023 top code
+      YEAR == 1960 & INCTOT >= 25000 ~ 257150,
+      YEAR == 1970 & INCTOT >= 32791 ~ 257150,
+      YEAR == 1980 & INCTOT >= 69556 ~ 257150,
+      YEAR == 1990 & INCTOT >= 110223 ~ 257150,
+      YEAR == 2000 & INCTOT >= 145364 ~ 257150,
+      YEAR == 2006 & INCTOT >= 170185 ~ 257150,
+      YEAR == 2011 & INCTOT >= 189779 ~ 257150,
+      YEAR == 2016 & INCTOT >= 202640 ~ 257150,
+      YEAR == 2021 & INCTOT >= 228578 ~ 257150,
+      YEAR == 2023 & INCTOT >= 257150 ~ 257150,
+      
+      # All other values — adjusted by inflation factor (converted to 2023 $)
+      YEAR == 1960 ~ INCTOT * 10.286,
+      YEAR == 1970 ~ INCTOT * 7.842,
+      YEAR == 1980 ~ INCTOT * 3.697,
+      YEAR == 1990 ~ INCTOT * 2.333,
+      YEAR == 2000 ~ INCTOT * 1.769,
+      YEAR == 2006 ~ INCTOT * 1.511,
+      YEAR == 2011 ~ INCTOT * 1.355,
+      YEAR == 2016 ~ INCTOT * 1.269,
+      YEAR == 2021 ~ INCTOT * 1.125,
+      YEAR == 2023 ~ INCTOT * 1.000,
+      
+      TRUE ~ NA_real_
     )
   )
 
