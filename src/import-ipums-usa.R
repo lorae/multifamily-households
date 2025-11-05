@@ -43,15 +43,33 @@ ipums_extract <- define_extract_micro(
   collection = "usa",
   samples = c(
     # For more info see https://usa.ipums.org/usa/sampdesc.shtml
-    "us1960a", # 1960 1%
+    "us1960b", # 1960 5% # TODO: switch to 1%
     "us1970c", # 1970 Form 1 Metro
     "us1980b", # 1980 1%
     "us1990b", # 1990 1%
     "us2000g", # 2000 1% 
+    "us2001a", # 2001 ACS (this exists?!)
+    "us2002a",
+    "us2003a",
+    "us2004a",
+    "us2005a",
     "us2006a", # 2006 ACS
+    "us2007a",
+    "us2008a",
+    "us2009a",
+    "us2010a",
     "us2011a", # 2011 ACS
+    'us2012a',
+    "us2013a",
+    "us2014a",
+    "us2015a",
     "us2016a", # 2016 ACS
+    "us2017a",
+    "us2018a",
+    "us2019a",
+    "us2020a", # 2020 ACS. Where is the decennial?
     "us2021a", # 2021 ACS
+    "us2022a",
     "us2023a" # 2023 ACS (1-year)
   ),
   variables = c(

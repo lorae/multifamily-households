@@ -102,7 +102,7 @@ base_model_data <- run_lpm_by_year() |>
   filter_by_race() 
 base_model_plot <- base_model_data |>
   plot_race_trends(title = "1: Probability of multifamily living over time, by race/ethnicity\nno controls",
-                   ymin = -0.02, ymax = 0.20)
+                   ymin = 0.00, ymax = 0.25)
 
 base_model_plot
 
@@ -111,7 +111,7 @@ demo_data <- run_lpm_by_year(controls = c("age_bucket", "SEX")) |>
   filter_by_race() 
 demo_plot <- demo_data |>
   plot_race_trends(title = "2: Probability of multifamily living over time, by race/ethnicity \nwith age and sex controls",
-                   ymin = -0.02, ymax = 0.20)
+                   ymin = 0.00, ymax = 0.25)
 
 demo_plot
 
@@ -121,7 +121,7 @@ demo_ses_data <- run_lpm_by_year(controls = c("age_bucket", "SEX", "hhinc_harmon
   filter_by_race() 
 demo_ses_plot <- demo_ses_data |>
   plot_race_trends(title = "3: Probability of multifamily living over time, by race/ethnicity \nwith age, sex, and household income controls",
-                   ymin = -0.02, ymax = 0.20)
+                   ymin = 0.00, ymax = 0.25)
 
 demo_ses_plot
 
