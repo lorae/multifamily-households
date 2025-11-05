@@ -117,10 +117,11 @@ demo_plot
 
 # SES inputs: income, education
 
-demo_ses_data <- run_lpm_by_year(controls = c("age_bucket", "SEX", "hhinc_harmonized")) |>
+# NOTE: This educ variable is not continuous like I'm implying by running this regression. It needs to be transformed
+demo_ses_data <- run_lpm_by_year(controls = c("age_bucket", "SEX", "hhinc_harmonized", "EDUC")) |>
   filter_by_race() 
 demo_ses_plot <- demo_ses_data |>
-  plot_race_trends(title = "3: Probability of multifamily living over time, by race/ethnicity \nwith age, sex, and household income controls",
+  plot_race_trends(title = "3: Probability of multifamily living over time, by race/ethnicity \nwith age, sex, and household income, and education controls",
                    ymin = 0.00, ymax = 0.25)
 
 demo_ses_plot
