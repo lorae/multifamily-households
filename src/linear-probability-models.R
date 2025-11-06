@@ -387,57 +387,81 @@ ggplot(
     panel.grid.minor = element_blank()
   )
 
-# Try 1960
-year_selection <- 2020
-df <- ipums_person |>
-  filter(
-    YEAR == year_selection,
-    OWNERSHP == 2, # renters only
-    PERNUM == 1, # hoh
-    !is.na(RENT),
-    !is.na(hhinc_harmonized),
-    hhinc_harmonized > 0
-  ) |>
-  mutate(
-    rent_burden = (RENT * 12) / hhinc_harmonized,
-    is_multifam = as.integer(is_multifam),
-    n_child_group = if_else(n_child >= 8, 8L, n_child)
-  ) |>
-  filter(rent_burden > 0, rent_burden < 2) |>  # exclude impossible values
-  collect() |>
-  mutate(
-    # Bin rent burden into 5% bands (0–4.9, 5–9.9, …)
-    rent_burden_band = cut(
-      rent_burden,
-      breaks = seq(0, 2, by = 0.05),
-      labels = sprintf("%g–%g",
-                       seq(0, 1.95, by = 0.05) * 100,
-                       seq(0.049, 2, by = 0.05) * 100),
-      include.lowest = TRUE,
-      right = FALSE
+### multiple years
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(glue)
+library(patchwork)   # for combining plots side-by-side or stacked
+
+years <- c(1960, 1970, 1980, 1990, 2000, 2010, 2020, 2023)
+
+plots <- list()
+
+# ---- Step 1: Loop through years ----
+for (yr in years) {
+  df <- ipums_person |>
+    filter(
+      YEAR == yr,
+      OWNERSHP == 2,          # renters only
+      PERNUM == 1,            # household head
+      !is.na(RENT),
+      !is.na(hhinc_harmonized),
+      hhinc_harmonized > 0
+    ) |>
+    mutate(
+      rent_burden = (RENT * 12) / hhinc_harmonized,
+      is_multifam = as.integer(is_multifam)
+    ) |>
+    filter(rent_burden > 0, rent_burden < 2) |>
+    collect() |>
+    mutate(
+      rent_burden_band = cut(
+        rent_burden,
+        breaks = seq(0, 2, by = 0.05),
+        labels = sprintf("%g–%g",
+                         seq(0, 1.95, by = 0.05) * 100,
+                         seq(0.049, 2, by = 0.05) * 100),
+        include.lowest = TRUE,
+        right = FALSE
+      )
     )
-  )
-
-df_crosstab <- crosstab_percent(
-  df,
-  wt_col = "HHWT_hh",                       # or "HHWT" if you want household weighting
-  group_by = c("rent_burden_band", "is_multifam"),
-  percent_group_by = c("is_multifam")
-) |>
-  filter(is_multifam == 1, !is.na(rent_burden_band))  # drop the NA bin
-
-ggplot(
-  df_crosstab, 
-  aes(x = rent_burden_band, y = percent/100)) +
-  geom_point(size = 2, color = "#0072B2") +
-  scale_y_continuous(labels = percent_format(accuracy = 1)) +
-  labs(
-    title = glue("Share of renter households that are doubled up, \nby rent burden, {year_selection}"),
-    x = "Rent Burden Band (% of Income)",
-    y = "Percent of Renter Households"
+  
+  df_crosstab <- crosstab_percent(
+    df,
+    wt_col = "HHWT_hh",
+    group_by = c("rent_burden_band", "is_multifam"),
+    percent_group_by = c("is_multifam")
+  ) |>
+    filter(is_multifam == 1, !is.na(rent_burden_band))
+  
+  # ---- Step 2: Store each plot ----
+  p <- ggplot(
+    df_crosstab,
+    aes(x = rent_burden_band, y = percent / 100)
   ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    panel.grid.minor = element_blank()
-  )
+    geom_point(size = 2, color = "#0072B2") +
+    scale_y_continuous(
+      labels = percent_format(accuracy = 1),
+      limits = c(0, 0.25)   # <-- sets y-axis limits (here 0–25%)
+    ) +
+    labs(
+      title = glue("Doubled-Up Renters by Rent Burden, {yr}"),
+      x = "Rent Burden Band (% of Income)",
+      y = NULL
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      panel.grid.minor = element_blank()
+    )
+  
+  plots[[as.character(yr)]] <- p
+}
+
+# ---- Step 3: Combine all plots on common y-axis ----
+combined_plot <- wrap_plots(plots, ncol = 2) +
+  plot_annotation(title = "Share of Renter Households that are Doubled-Up by Rent Burden (1960–2023)",
+                  theme = theme(plot.title = element_text(size = 16, face = "bold")))
+
+combined_plot
