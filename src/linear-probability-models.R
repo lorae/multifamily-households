@@ -279,10 +279,29 @@ df_low_inc_crosstab <- crosstab_percent(
 
 # ---- Step 3: Plot ----
 ggplot(
-  df_low_inc_crosstab , 
-  aes(x = rent_burden_band, y = percent/100)) +
-  geom_point(size = 2, color = "#0072B2") +
-  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  df_low_inc_crosstab,
+  aes(
+    x = rent_burden_band,
+    y = percent / 100
+  )
+) +
+  # 1️⃣ Base layer: all non-CITY==0 points (solid black)
+  geom_point(
+    data = subset(df_low_inc_crosstab, CITY != 0),
+    color = "black",
+    size = 2,
+    alpha = 0.9
+  ) +
+  # 2️⃣ Highlight layer: CITY==0 (larger, hollow)
+  geom_point(
+    data = subset(df_low_inc_crosstab, CITY == 0),
+    shape = 21,              # hollow circle
+    stroke = 1.3,            # line thickness of circle border
+    size = 4,                # larger point
+    color = "black",
+    fill = "white"
+  ) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(
     title = "Share of Multifamily Households by Rent Burden",
     x = "Rent Burden Band (% of Income)",
@@ -291,8 +310,10 @@ ggplot(
   theme_minimal(base_size = 14) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
-    panel.grid.minor = element_blank()
+    panel.grid.minor = element_blank(),
+    legend.position = "none"
   )
+
 
 ggplot(
   df_low_inc_crosstab |> filter(CITY == 5350), 
@@ -310,3 +331,113 @@ ggplot(
     panel.grid.minor = element_blank()
   )
 
+
+###
+# Try 2023
+df <- ipums_person |>
+  filter(
+    YEAR == 2023,
+    OWNERSHP == 2, # renters only
+    PERNUM == 1, # hoh
+    !is.na(RENT),
+    !is.na(hhinc_harmonized),
+    hhinc_harmonized > 0
+  ) |>
+  mutate(
+    rent_burden = (RENT * 12) / hhinc_harmonized,
+    is_multifam = as.integer(is_multifam),
+    n_child_group = if_else(n_child >= 8, 8L, n_child)
+  ) |>
+  filter(rent_burden > 0, rent_burden < 2) |>  # exclude impossible values
+  collect() |>
+  mutate(
+    # Bin rent burden into 5% bands (0–4.9, 5–9.9, …)
+    rent_burden_band = cut(
+      rent_burden,
+      breaks = seq(0, 2, by = 0.05),
+      labels = sprintf("%g–%g",
+                       seq(0, 1.95, by = 0.05) * 100,
+                       seq(0.049, 2, by = 0.05) * 100),
+      include.lowest = TRUE,
+      right = FALSE
+    )
+  )
+
+df_crosstab <- crosstab_percent(
+  df,
+  wt_col = "HHWT_hh",                       # or "HHWT" if you want household weighting
+  group_by = c("rent_burden_band", "is_multifam"),
+  percent_group_by = c("is_multifam")
+) |>
+  filter(is_multifam == 1, !is.na(rent_burden_band))  # drop the NA bin
+
+ggplot(
+  df_crosstab, 
+  aes(x = rent_burden_band, y = percent/100)) +
+  geom_point(size = 2, color = "#0072B2") +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  labs(
+    title = "Share of renter households that are doubled up, \nby rent burden, 2023",
+    x = "Rent Burden Band (% of Income)",
+    y = "Percent of Renter Households"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor = element_blank()
+  )
+
+# Try 1960
+year_selection <- 2020
+df <- ipums_person |>
+  filter(
+    YEAR == year_selection,
+    OWNERSHP == 2, # renters only
+    PERNUM == 1, # hoh
+    !is.na(RENT),
+    !is.na(hhinc_harmonized),
+    hhinc_harmonized > 0
+  ) |>
+  mutate(
+    rent_burden = (RENT * 12) / hhinc_harmonized,
+    is_multifam = as.integer(is_multifam),
+    n_child_group = if_else(n_child >= 8, 8L, n_child)
+  ) |>
+  filter(rent_burden > 0, rent_burden < 2) |>  # exclude impossible values
+  collect() |>
+  mutate(
+    # Bin rent burden into 5% bands (0–4.9, 5–9.9, …)
+    rent_burden_band = cut(
+      rent_burden,
+      breaks = seq(0, 2, by = 0.05),
+      labels = sprintf("%g–%g",
+                       seq(0, 1.95, by = 0.05) * 100,
+                       seq(0.049, 2, by = 0.05) * 100),
+      include.lowest = TRUE,
+      right = FALSE
+    )
+  )
+
+df_crosstab <- crosstab_percent(
+  df,
+  wt_col = "HHWT_hh",                       # or "HHWT" if you want household weighting
+  group_by = c("rent_burden_band", "is_multifam"),
+  percent_group_by = c("is_multifam")
+) |>
+  filter(is_multifam == 1, !is.na(rent_burden_band))  # drop the NA bin
+
+ggplot(
+  df_crosstab, 
+  aes(x = rent_burden_band, y = percent/100)) +
+  geom_point(size = 2, color = "#0072B2") +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  labs(
+    title = glue("Share of renter households that are doubled up, \nby rent burden, {year_selection}"),
+    x = "Rent Burden Band (% of Income)",
+    y = "Percent of Renter Households"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor = element_blank()
+  )
