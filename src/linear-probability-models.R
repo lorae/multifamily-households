@@ -387,81 +387,83 @@ ggplot(
     panel.grid.minor = element_blank()
   )
 
-### multiple years
+### Persons per Bedroom by Rent Burden — Example for 2020
 library(dplyr)
 library(ggplot2)
 library(scales)
 library(glue)
-library(patchwork)   # for combining plots side-by-side or stacked
+library(RColorBrewer)
 
-years <- c(1960, 1970, 1980, 1990, 2000, 2010, 2020, 2023)
 
-plots <- list()
-
-# ---- Step 1: Loop through years ----
-for (yr in years) {
-  df <- ipums_person |>
-    filter(
-      YEAR == yr,
-      OWNERSHP == 2,          # renters only
-      PERNUM == 1,            # household head
-      !is.na(RENT),
-      !is.na(hhinc_harmonized),
-      hhinc_harmonized > 0
-    ) |>
-    mutate(
-      rent_burden = (RENT * 12) / hhinc_harmonized,
-      is_multifam = as.integer(is_multifam)
-    ) |>
-    filter(rent_burden > 0, rent_burden < 2) |>
-    collect() |>
-    mutate(
-      rent_burden_band = cut(
-        rent_burden,
-        breaks = seq(0, 2, by = 0.05),
-        labels = sprintf("%g–%g",
-                         seq(0, 1.95, by = 0.05) * 100,
-                         seq(0.049, 2, by = 0.05) * 100),
-        include.lowest = TRUE,
-        right = FALSE
-      )
-    )
-  
-  df_crosstab <- crosstab_percent(
-    df,
-    wt_col = "HHWT_hh",
-    group_by = c("rent_burden_band", "is_multifam"),
-    percent_group_by = c("is_multifam")
+df <- ipums_person |>
+  filter(
+    OWNERSHP == 2,       # renters only
+    PERNUM == 1,         # household head
+    !is.na(RENT),
+    !is.na(hhinc_harmonized),
+    hhinc_harmonized > 0,
+    !is.na(ppbr),         # persons per bedroom
+    ppbr > 0
   ) |>
-    filter(is_multifam == 1, !is.na(rent_burden_band))
-  
-  # ---- Step 2: Store each plot ----
-  p <- ggplot(
-    df_crosstab,
-    aes(x = rent_burden_band, y = percent / 100)
-  ) +
-    geom_point(size = 2, color = "#0072B2") +
-    scale_y_continuous(
-      labels = percent_format(accuracy = 1),
-      limits = c(0, 0.25)   # <-- sets y-axis limits (here 0–25%)
-    ) +
-    labs(
-      title = glue("Doubled-Up Renters by Rent Burden, {yr}"),
-      x = "Rent Burden Band (% of Income)",
-      y = NULL
-    ) +
-    theme_minimal(base_size = 12) +
-    theme(
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      panel.grid.minor = element_blank()
+  mutate(
+    rent_burden = (RENT * 12) / hhinc_harmonized
+  ) |>
+  filter(rent_burden > 0, rent_burden < 1) |>
+  collect() |>
+  mutate(
+    rent_burden_band = cut(
+      rent_burden,
+      breaks = seq(0, 2, by = 0.05),
+      labels = sprintf("%g–%g",
+                       seq(0, 1.95, by = 0.05) * 100,
+                       seq(0.049, 2, by = 0.05) * 100),
+      include.lowest = TRUE,
+      right = FALSE
     )
-  
-  plots[[as.character(yr)]] <- p
-}
+  )
 
-# ---- Step 3: Combine all plots on common y-axis ----
-combined_plot <- wrap_plots(plots, ncol = 2) +
-  plot_annotation(title = "Share of Renter Households that are Doubled-Up by Rent Burden (1960–2023)",
-                  theme = theme(plot.title = element_text(size = 16, face = "bold")))
+df_crosstab <- crosstab_mean(
+  df,
+  wt_col = "HHWT_hh",
+  value = "ppbr",
+  group_by = c("rent_burden_band", "YEAR")
+) |>
+  filter(YEAR %in% c(1960, 1970, 1980, 1990, 2000, 2010, 2020, 2023)) |>
+  filter(count >= 100) |>
+  mutate(YEAR = factor(YEAR, levels = c(1960, 1970, 1980, 1990, 2000, 2010, 2020, 2023)))
 
-combined_plot
+p <- ggplot(
+  df_crosstab,
+  aes(
+    x = rent_burden_band,
+    y = weighted_mean,
+    group = YEAR,
+    color = YEAR
+  )
+) +
+  geom_line(linewidth = 1.1, alpha = 0.9) +
+  geom_point(size = 1.8) +
+  scale_color_gradientn(
+    colors = c("#4575b4", "#91bfdb", "#e0f3f8", "#ffffbf",
+               "#fee090", "#fc8d59", "#d73027"),
+    name = "Year",
+    breaks = c(1960, 1980, 2000, 2020, 2023)
+  ) +
+  scale_y_continuous(
+    labels = number_format(accuracy = 0.1),
+    limits = c(1, 2)
+  ) +
+  labs(
+    title = "Persons per Bedroom by Rent Burden (1960–2023)",
+    x = "Rent Burden Band (% of Income)",
+    y = "Average Persons per Bedroom"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
+
+p
