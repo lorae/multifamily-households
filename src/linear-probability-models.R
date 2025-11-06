@@ -13,7 +13,8 @@ devtools::load_all("../demographr")
 
 con <- dbConnect(duckdb::duckdb(), "data/db/ipums.duckdb")
 ipums_person <- tbl(con, "ipums_person_with_hh") |>
-  filter(AGE >= 18 & AGE <= 65)
+  filter(AGE >= 18 & AGE <= 65) |>
+  filter(PERNUM == 1)
 
 library(dplyr)
 library(purrr)
@@ -106,8 +107,18 @@ base_model_plot <- base_model_data |>
 
 base_model_plot
 
+# Basic demographics model: child
+child_data <- run_lpm_by_year(controls = c("n_child")) |>
+  filter_by_race() 
+child_plot <- child_data |>
+  plot_race_trends(title = "2: Probability of multifamily living over time, by race/ethnicity \nwith age and sex controls",
+                   ymin = 0.00, ymax = 0.25)
+
+child_plot
+
+
 # Basic demographics model: age, sex
-demo_data <- run_lpm_by_year(controls = c("age_bucket", "SEX")) |>
+demo_data <- run_lpm_by_year(controls = c("n_child")) |>
   filter_by_race() 
 demo_plot <- demo_data |>
   plot_race_trends(title = "2: Probability of multifamily living over time, by race/ethnicity \nwith age and sex controls",
@@ -131,4 +142,171 @@ demo_ses_plot
 # Geography
 
 # outcomes: housing unit attributes such as kitchen, unitsstr, room, bedroom, ppbr
+df <- ipums_person |>
+  mutate(
+    is_multifam = as.integer(is_multifam),
+    n_child_group = if_else(n_child >= 8, 8L, n_child)  # lump 8+ together
+  ) |>
+  group_by(n_child_group) |>
+  summarise(
+    p_multifam = mean(is_multifam, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) |>
+  collect()
+
+ggplot(df, aes(x = factor(n_child_group), y = p_multifam)) +
+  geom_point(size = 2) +
+  geom_line(aes(group = 1)) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    x = "Number of Children (8+ grouped)",
+    y = "Percent Multifamily",
+    title = "Likelihood of Living in Multifamily Household by Number of Children"
+  ) +
+  theme_minimal(base_size = 14)
+
+# rent burden
+ipums_person |>
+  filter(OWNERSHP == 2, 
+         !is.na(RENT), 
+         !is.na(hhinc_harmonized),
+         hhinc_harmonized > 0) |>
+  mutate(rent_burden = (RENT * 13) / hhinc_harmonized) |>
+  filter(rent_burden > 0, rent_burden < 2) |>
+  pull(rent_burden) |>
+  hist(
+    breaks = 50,
+    main = "Rent Burden Among Renters",
+    xlab = "Annual Rent / Household Income",
+    col = "skyblue",
+    border = "white"
+  )
+
+# 
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+df <- ipums_person |>
+  filter(OWNERSHP == 2,                 # renters only
+         !is.na(RENT),
+         !is.na(hhinc_harmonized),
+         hhinc_harmonized > 0) |>
+  mutate(
+    rent_burden = (RENT * 12) / hhinc_harmonized,
+    is_multifam = as.integer(is_multifam),
+    n_child_group = if_else(n_child >= 8, 8L, n_child)
+  ) |>
+  filter(rent_burden > 0, rent_burden < 2) |>
+  group_by(n_child_group) |>
+  summarise(
+    mean_rent_burden = mean(rent_burden, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) |>
+  collect()
+
+ggplot(df, aes(x = factor(n_child_group), y = mean_rent_burden)) +
+  geom_point(size = 2) +
+  geom_line(aes(group = 1)) +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  labs(
+    x = "Number of Children (8+ grouped)",
+    y = "Average Rent Burden (as % of Income)",
+    title = "Average Rent Burden by Number of Children, Renters Only"
+  ) +
+  theme_minimal(base_size = 14)
+
+# Try 2023
+df <- ipums_person |>
+  filter(
+    YEAR == 2023,
+    OWNERSHP == 2, # renters only
+    PERNUM == 1, # hoh
+    !is.na(RENT),
+    !is.na(hhinc_harmonized),
+    hhinc_harmonized > 0
+    ) |>
+  mutate(
+    rent_burden = (RENT * 12) / hhinc_harmonized,
+    is_multifam = as.integer(is_multifam),
+    n_child_group = if_else(n_child >= 8, 8L, n_child)
+  )
+
+ ####
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+# ---- Step 1: Filter to low-income renter heads of household in 2023 ----
+df_low_inc <- ipums_person |>
+  filter(
+    YEAR == 2023,
+    OWNERSHP == 2,                # renters only
+    n_child > 0, # at least one child living with them
+    PERNUM == 1, #hoh
+    !is.na(RENT),
+    !is.na(hhinc_harmonized),
+    hhinc_harmonized > 0
+  ) |>
+  mutate(
+    rent_burden = (RENT * 12) / hhinc_harmonized
+  ) |>
+  filter(rent_burden > 0, rent_burden < 2) |>  # exclude impossible values
+  collect() |>
+  mutate(
+    # Bin rent burden into 5% bands (0–4.9, 5–9.9, …)
+    rent_burden_band = cut(
+      rent_burden,
+      breaks = seq(0, 2, by = 0.05),
+      labels = sprintf("%g–%g",
+                       seq(0, 1.95, by = 0.05) * 100,
+                       seq(0.049, 2, by = 0.05) * 100),
+      include.lowest = TRUE,
+      right = FALSE
+    )
+  )
+
+# ---- Step 2: Compute weighted percent of multifamily households per band ----
+df_low_inc_crosstab <- crosstab_percent(
+  df_low_inc,
+  wt_col = "PERWT",                       # or "HHWT" if you want household weighting
+  group_by = c("rent_burden_band", "is_multifam", "CITY"),
+  percent_group_by = c("is_multifam", "CITY")
+) |>
+  filter(is_multifam == 1, !is.na(rent_burden_band))  # drop the NA bin
+
+# ---- Step 3: Plot ----
+ggplot(
+  df_low_inc_crosstab , 
+  aes(x = rent_burden_band, y = percent/100)) +
+  geom_point(size = 2, color = "#0072B2") +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  labs(
+    title = "Share of Multifamily Households by Rent Burden",
+    x = "Rent Burden Band (% of Income)",
+    y = "Percent of Multifamily Households"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor = element_blank()
+  )
+
+ggplot(
+  df_low_inc_crosstab |> filter(CITY == 5350), 
+  aes(x = rent_burden_band, y = percent/100)) +
+  geom_point(size = 2, color = "#0072B2") +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  labs(
+    title = "Share of Multifamily Households by Rent Burden (Low-Income Renters, 2023)",
+    x = "Rent Burden Band (% of Income)",
+    y = "Percent of Multifamily Households"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor = element_blank()
+  )
 
