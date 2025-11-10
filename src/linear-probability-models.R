@@ -339,6 +339,7 @@ df <- ipums_person |>
     YEAR == 2023,
     OWNERSHP == 2, # renters only
     PERNUM == 1, # hoh
+    hhinc_harmonized >= 0 & hhinc_harmonized < 20000,
     !is.na(RENT),
     !is.na(hhinc_harmonized),
     hhinc_harmonized > 0
@@ -387,6 +388,83 @@ ggplot(
     panel.grid.minor = element_blank()
   )
 
+#####
+###
+# Try 2023
+df <- ipums_person |>
+  filter(
+    YEAR == 2023,
+    OWNERSHP == 2, # renters only
+    PERNUM == 1, # hoh
+    hhinc_harmonized >= 0 & hhinc_harmonized < 20000,
+    !is.na(RENT),
+    !is.na(hhinc_harmonized),
+    hhinc_harmonized > 0
+  ) |>
+  mutate(
+    rent_burden = (RENT * 12) / hhinc_harmonized,
+    is_multifam = as.integer(is_multifam),
+    n_child_group = if_else(n_child >= 8, 8L, n_child)
+  ) |>
+  filter(RENT < 4000) |>  
+  collect() |>
+  mutate(
+    rent_burden_band = cut(
+      rent_burden,
+      breaks = seq(0, 2, by = 0.05),
+      labels = sprintf("%g–%g",
+                       seq(0, 1.95, by = 0.05) * 100,
+                       seq(0.049, 2, by = 0.05) * 100),
+      include.lowest = TRUE,
+      right = FALSE
+    ),
+    rent_band = cut(
+      RENT,                                # <— make sure to use uppercase RENT
+      breaks = seq(0, 4000, by = 200),
+      include.lowest = TRUE,
+      right = FALSE,
+      labels = sprintf("$%d–$%d",
+                       seq(0, 3800, by = 200),
+                       seq(200, 4000, by = 200))
+    ),
+    rent_per_subfamily = rent / NFAMS,
+    rent_per_sf_band = cut(
+      rent_per_subfamily,                                # <— make sure to use uppercase RENT
+      breaks = seq(0, 4000, by = 200),
+      include.lowest = TRUE,
+      right = FALSE,
+      labels = sprintf("$%d–$%d",
+                       seq(0, 3800, by = 200),
+                       seq(200, 4000, by = 200))
+    ),
+    
+  )
+
+df_crosstab <- crosstab_percent(
+  df,
+  wt_col = "HHWT_hh",                       # or "HHWT" if you want household weighting
+  group_by = c("rent_per_sf_band", "is_multifam"),
+  percent_group_by = c("is_multifam")
+) |>
+  filter(is_multifam == 1)  # drop the NA bin
+
+ggplot(
+  df_crosstab, 
+  aes(x = rent_per_sf_band, y = percent/100)) +
+  geom_point(size = 2, color = "#0072B2") +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  labs(
+    title = "Share of renter households that are doubled up, \nby rent burden, 2023",
+    x = "Rent Burden Band (% of Income)",
+    y = "Percent of Renter Households"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor = element_blank()
+  )
+
+
 ### Persons per Bedroom by Rent Burden — Example for 2020
 library(dplyr)
 library(ggplot2)
@@ -428,9 +506,14 @@ df_crosstab <- crosstab_mean(
   value = "ppbr",
   group_by = c("rent_burden_band", "YEAR")
 ) |>
-  filter(YEAR %in% c(1960, 1970, 1980, 1990, 2000, 2010, 2020, 2023)) |>
+  filter(YEAR %in% c(2000, 2010, 2020, 2023)) |>
   filter(count >= 100) |>
-  mutate(YEAR = factor(YEAR, levels = c(1960, 1970, 1980, 1990, 2000, 2010, 2020, 2023)))
+  mutate(
+    YEAR = factor(YEAR, levels = c(2000, 2010, 2020, 2023))
+  )
+
+# choose a sequential RColorBrewer palette with 8 colors
+pal <- brewer.pal(4, "RdYlBu")  # other good options: "YlOrRd", "PuBuGn", "RdYlBu"
 
 p <- ggplot(
   df_crosstab,
@@ -443,11 +526,9 @@ p <- ggplot(
 ) +
   geom_line(linewidth = 1.1, alpha = 0.9) +
   geom_point(size = 1.8) +
-  scale_color_gradientn(
-    colors = c("#4575b4", "#91bfdb", "#e0f3f8", "#ffffbf",
-               "#fee090", "#fc8d59", "#d73027"),
-    name = "Year",
-    breaks = c(1960, 1980, 2000, 2020, 2023)
+  scale_color_manual(
+    values = pal,
+    name = "Year"
   ) +
   scale_y_continuous(
     labels = number_format(accuracy = 0.1),
