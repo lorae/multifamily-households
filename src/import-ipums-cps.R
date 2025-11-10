@@ -45,13 +45,34 @@ ipums_extract <- define_extract_micro(
   samples = get_sample_info("cps")|> arrange(name) |> tail(100) |> pull(name),
   variables = c(
     # Household-level
-    "NUMPREC", "NFAMS", "NCOUPLES", "NMOTHERS", "NFATHERS", "MULTGEN", "ROOMS", "BEDROOMS", 
+    "NUMPREC", "NFAMS", "NCOUPLES", "NMOTHERS", "NFATHERS", "MULTGEN", 
     # Person-level
-    "PERNUM", "PERWT", "LINENO", "RELATE",
-    "SUBFAM", "FAMSIZE", "FAMUNIT",
+    "PERNUM", "LINENO", "RELATE",
+    "FAMSIZE", "FAMUNIT",
     "MOMLOC", "POPLOC", "PELNDAD", "PELNMOM", "PEMOMTYP", 
     "SPLOC",  "ASPOUSE", "PECOHAB",
     "NCHILD",  "NSIBS",
     "SEX", "AGE"
   )
 )
+
+# Submit extract request
+submitted <- submit_extract(ipums_extract)
+
+# Poll until extract is ready
+wait_for_extract(submitted) 
+
+# ----- Step 2: Download and save extract ----- #
+
+# Once ready, download the extract ZIP
+download_extract(
+  submitted,
+  download_dir = download_dir,
+  overwrite = TRUE,
+  api_key = api_key
+)
+
+extract_num <- sprintf("%05d", submitted$number)
+
+ddi_path <- glue("{download_dir}/cps_{extract_num}.xml")
+dat_path <- glue("{download_dir}/cps_{extract_num}.dat.gz")
