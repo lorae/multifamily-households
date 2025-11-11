@@ -45,7 +45,7 @@ ipums_extract <- define_extract_micro(
   samples = get_sample_info("cps")|> arrange(name) |> tail(100) |> pull(name),
   variables = c(
     # Household-level
-    "NUMPREC", "NFAMS", "NCOUPLES", "NMOTHERS", "NFATHERS", "MULTGEN", 
+    "NUMPREC", "NFAMS", "NCOUPLES", "NMOTHERS", "NFATHERS", "MULTGEN", "GQ",
     # Person-level
     "PERNUM", "LINENO", "RELATE",
     "FAMSIZE", "FAMUNIT",
@@ -76,3 +76,12 @@ extract_num <- sprintf("%05d", submitted$number)
 
 ddi_path <- glue("{download_dir}/cps_{extract_num}.xml")
 dat_path <- glue("{download_dir}/cps_{extract_num}.dat.gz")
+
+# ----- Step 3: Save to DuckDB ----- #
+
+ddi <- read_ipums_ddi(ddi_path)
+ipums_tb <- read_ipums_micro(ddi, var_attrs = c()) 
+
+con <- dbConnect(duckdb::duckdb(), glue("{db_dir}/ipums_cps.duckdb"))
+dbWriteTable(con, "ipums-cps", ipums_tb, overwrite = TRUE)
+DBI::dbDisconnect(con)
