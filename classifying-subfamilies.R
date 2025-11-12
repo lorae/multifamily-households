@@ -19,7 +19,8 @@ ipums_household <- ipums_db |>
   mutate(hhid = paste(YEAR, MONTH, SERIAL, sep = "-")) |>
   collect() |>
   mutate(
-    date = make_date(YEAR, MONTH, 1) |> format("%B %Y"),
+    date = make_date(YEAR, MONTH, 1),
+    date_formatted = date |> format("%B %Y"),
     relate_encoded = case_when(
       RELATE == 101 ~ "HOH",
       RELATE %in% c(201, 202, 203) ~ "Spouse",

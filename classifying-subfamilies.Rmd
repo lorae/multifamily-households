@@ -44,7 +44,7 @@ get_household_tables <- function(hh_id) {
 
 print_household_tables <- function(hh_list, hh_id = NULL) {
   for (d in names(hh_list)) {
-    cat("\n\n###", d, "\n\n")
+    #cat("\n\n###", d, "\n\n")
     print(knitr::kable(hh_list[[d]], caption = paste("Household", hh_id, "-", d)))
   }
 }
@@ -57,19 +57,18 @@ get_hhs <- function(hh_id) {
 
 ## Nuclear households
 
-2 parents with 4 young children
+### 2 parents with 4 young children
 
 ```{r results='asis'}
 get_hhs(20250104270900)
 ```
 
-2 parents with 3 children
+### 2 parents with 3 children
 ```{r results='asis'}
 get_hhs(20201308862200)
 ```
 
-Here's 2 parents with 4 young children
-
+### Older married couple
 
 ```{r results='asis'}
 get_hhs(20231100668400)
