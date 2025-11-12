@@ -75,7 +75,18 @@ get_hhs(20201308862200)
 get_hhs(20231100668400)
 ```
 
+# Singl
+### A single mom and her 3 girls
 
+```{r results='asis'}
+get_hhs(20191102751800)
+```
 
+### A married 50-something couple and their 4 children (ranging from 13 to 37), plus the sibling of the wife, who is HOH
+The oldest two  children (the 18 and the 37 year olds) as well as the 50-something sibling move out.
+
+```{r results='asis'}
+get_hhs(20190701403300)
+```
 
 
