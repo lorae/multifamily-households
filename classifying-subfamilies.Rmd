@@ -41,11 +41,15 @@ print_household_tables <- function(hh_list, hh_id = NULL) {
   }
 }
 
+get_hhs <- function(hh_id) {
+  get_household_tables(hh_id) |> print_household_tables(hh_id)
+}
+
+```
 ```
 
 Here's 2 parents with 4 young children
 
 ```{r results='asis'}
-hh_list <- get_household_tables(20250104270900)
-print_household_tables(hh_list, hh_id = 20250104270900)
+get_hhs(20231100668400)
 ```
