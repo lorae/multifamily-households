@@ -38,6 +38,7 @@ ipums_household <- readRDS("throughput/classifying-subfamilies.rds")
 get_household_tables <- function(hh_id) {
   ipums_household |>
     filter(CPSID == hh_id) |>
+    select(-CPSID) |>
     arrange(date) |>
     split(~date)
 }
@@ -45,7 +46,7 @@ get_household_tables <- function(hh_id) {
 print_household_tables <- function(hh_list, hh_id = NULL) {
   for (d in names(hh_list)) {
     #cat("\n\n###", d, "\n\n")
-    print(knitr::kable(hh_list[[d]], caption = paste("Household", hh_id, "-", d)))
+    print(knitr::kable(hh_list[[d]], caption = paste(d, " | ", "Household", hh_id)))
   }
 }
 
