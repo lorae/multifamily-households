@@ -20,53 +20,32 @@ library("lubridate")
 
 devtools::load_all("../demographr")
 
-# ----- Step 1: Connect to the database ----- #
-
-con <- dbConnect(duckdb::duckdb(), "data/db/ipums_cps.duckdb")
-ipums_db <- tbl(con, "ipums-cps")
-
 ```
 
 ```{r wrangle-data}
-ipums_household <- ipums_db |>
-  mutate(hhid = paste(YEAR, MONTH, SERIAL, sep = "-")) |>
-  collect() |>
-  mutate(
-    date = make_date(YEAR, MONTH, 1) |> format("%B %Y"),
-    relate_encoded = case_when(
-      RELATE == 101 ~ "HOH",
-      RELATE %in% c(201, 202, 203) ~ "Spouse",
-      RELATE == 301 ~ "Child",
-      RELATE == 303 ~ "Stepchild",
-      RELATE == 501 ~ "Parent",
-      RELATE == 701 ~ "Sibling",
-      RELATE == 901 ~ "Grandchild",
-      RELATE == 1001 ~ "Other relative",
-      RELATE == 1113 ~ "Partner / Roommate",
-      RELATE %in% c(1114, 1116, 1117) ~ "Unmarried partner",
-      RELATE == 1115 ~ "Housemate / roommate",
-      RELATE == 1241 ~ "Roomer / boarder / lodger",
-      RELATE == 1242 ~ "Foster child",
-      RELATE == 1260 ~ "Other nonrelative"
-    ),
-    sex_encoded = case_when(
-      SEX == 1 ~ "Male",
-      SEX == 2 ~ "Female"
-    )
-  ) |>
-  select(CPSID, date, NUMPREC, PERNUM, relate_encoded, AGE, sex_encoded, MOMLOC, PELNMOM, POPLOC, PELNDAD, NSIBS, SPLOC, ASPOUSE, PECOHAB,   LINENO)
+ipums_household <- readRDS("throughput/classifying-subfamilies.rds")
+```
 
-# View one household
-view_one_hh <- function(hh_id) {
- ipums_household |>
-  filter(CPSID == rand_id) |>
-  collect()
+```{r define-function}
+get_household_tables <- function(hh_id) {
+  ipums_household |>
+    filter(CPSID == hh_id) |>
+    arrange(date) |>
+    split(~date)
+}
+
+print_household_tables <- function(hh_list, hh_id = NULL) {
+  for (d in names(hh_list)) {
+    cat("\n\n###", d, "\n\n")
+    print(knitr::kable(hh_list[[d]], caption = paste("Household", hh_id, "-", d)))
+  }
 }
 
 ```
 
 Here's 2 parents with 4 young children
 
-```{r}
-view_one_hh(20250104270900)
+```{r results='asis'}
+hh_list <- get_household_tables(20250104270900)
+print_household_tables(hh_list, hh_id = 20250104270900)
 ```
