@@ -5,6 +5,14 @@ output: html_document
 
 Let's look at some examples.
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  echo = FALSE
+)
+```
+
 ```{r load-data}
 # process-ipums-cps.R
 #
