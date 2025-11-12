@@ -51,10 +51,13 @@ ipums_household <- ipums_db |>
          SPLOC, ASPOUSE, PECOHAB, 
          NSIBS) |>
   group_by(CPSID) |>
+  # These four variables use LINENO, *not* PERNUM, to ID the target individual.
+  # I translate to PERNUM for consistency.
   mutate(
-    MOMLOC_PERNUM = PERNUM[match(MOMLOC, LINENO)],
-    POPLOC_PERNUM = PERNUM[match(POPLOC, LINENO)],
-    SPLOC_PERNUM = PERNUM[match(SPLOC, LINENO)]
+    ASPOUSE_PERNUM = PERNUM[match(ASPOUSE, LINENO)],
+    PECOHAB_PERNUM = PERNUM[match(PECOHAB, LINENO)],
+    PELNDAD_PERNUM = PERNUM[match(PELNDAD, LINENO)],
+    PELNMOM_PERNUM = PERNUM[match(PELNMOM, LINENO)]
   ) |>
   ungroup()
 
