@@ -54,10 +54,28 @@ get_hhs <- function(hh_id) {
 }
 
 ```
+
+## Nuclear households
+
+2 parents with 4 young children
+
+```{r results='asis'}
+get_hhs(20250104270900)
+```
+
+2 parents with 3 children
+```{r results='asis'}
+get_hhs(20201308862200)
 ```
 
 Here's 2 parents with 4 young children
 
+
 ```{r results='asis'}
 get_hhs(20231100668400)
 ```
+
+
+
+
+
